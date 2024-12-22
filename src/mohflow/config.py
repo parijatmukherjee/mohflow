@@ -1,9 +1,10 @@
-from typing import Dict, Any, Optional
+from typing import Optional
 from pydantic_settings import BaseSettings
 
 
 class LogConfig(BaseSettings):
     """Logging configuration"""
+
     SERVICE_NAME: str
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "INFO"

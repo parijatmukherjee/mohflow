@@ -22,12 +22,12 @@ def test_loki_handler_setup(mocker):
 def test_loki_handler_with_extra_tags(mocker):
     """Test Loki handler with extra tags"""
     # Mock the LokiHandler class
-    mock_loki_class = mocker.patch('logging_loki.LokiHandler')
+    mock_loki_class = mocker.patch("logging_loki.LokiHandler")
     mock_formatter = mocker.Mock(spec=logging.Formatter)
     extra_tags = {"app_version": "1.0.0"}
 
     # Create handler
-    handler = LokiHandler.setup(
+    LokiHandler.setup(
         url="http://loki:3100",
         service_name="test-service",
         environment="test",
@@ -45,8 +45,7 @@ def test_loki_handler_with_extra_tags(mocker):
 def test_loki_handler_error(mocker):
     """Test Loki handler error handling"""
     mocker.patch(
-        'logging_loki.LokiHandler',
-        side_effect=Exception("Connection failed")
+        "logging_loki.LokiHandler", side_effect=Exception("Connection failed")
     )
 
     with pytest.raises(ConfigurationError) as exc_info:
