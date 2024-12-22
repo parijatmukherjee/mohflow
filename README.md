@@ -2,6 +2,9 @@
 
 Mohflow is a Python logging package that provides structured JSON logging with support for console output, file logging, and Grafana Loki integration. It's designed to be easy to use while providing powerful logging capabilities.
 
+## Status
+[![Build](https://github.com/parijatmukherjee/mohflow/actions/workflows/ci.yml/badge.svg)](https://github.com/parijatmukherjee/mohflow/actions/workflows/ci.yml)
+
 ## Features
 
 - 📋 Structured JSON logging for better log parsing
