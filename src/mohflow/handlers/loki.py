@@ -3,6 +3,7 @@ import logging_loki
 from ..exceptions import ConfigurationError
 from typing import Dict, Any
 
+
 class LokiHandler:
     @staticmethod
     def setup(
@@ -29,6 +30,4 @@ class LokiHandler:
             handler.setFormatter(formatter)
             return handler
         except Exception as e:
-            raise ConfigurationError(
-                f"Failed to setup Loki logging: {str(e)}"
-            )
+            raise ConfigurationError(f"Failed to setup Loki logging: {str(e)}")

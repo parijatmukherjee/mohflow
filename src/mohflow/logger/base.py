@@ -1,6 +1,5 @@
 import logging
-from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional
 from pythonjsonlogger import json as jsonlogger
 from ..config import LogConfig
 from ..exceptions import ConfigurationError
@@ -22,11 +21,13 @@ class MohflowLogger:
     ):
         # Check file logging configuration first
         if file_logging and not log_file_path:
-            raise ConfigurationError("LOG_FILE_PATH must be set when FILE_LOGGING is enabled")
+            raise ConfigurationError(
+                "LOG_FILE_PATH must be set when FILE_LOGGING is enabled"
+            )
 
         # Validate log level before setting
         try:
-            numeric_level = getattr(logging, log_level.upper())
+            getattr(logging, log_level.upper())
         except AttributeError:
             raise ValueError(f"Invalid log level: {log_level}")
 
@@ -47,15 +48,14 @@ class MohflowLogger:
         logger = logging.getLogger(self.config.SERVICE_NAME)
         logger.setLevel(getattr(logging, self.config.LOG_LEVEL.upper()))
 
-
         # Prevent duplicate logs
         logger.handlers = []
 
         # Create formatter
         formatter = jsonlogger.JsonFormatter(
-            fmt='%(timestamp)s %(levelname)s %(name)s %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S',
-            json_default=str
+            fmt="%(timestamp)s %(levelname)s %(name)s %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+            json_default=str,
         )
 
         # Add console handler
@@ -86,9 +86,9 @@ class MohflowLogger:
     def _create_json_formatter(self):
         """Create JSON formatter for structured logging"""
         return jsonlogger.JsonFormatter(
-            '%(asctime)s %(levelname)s %(name)s %(message)s',
-            rename_fields={'levelname': 'level'},
-            timestamp=True
+            "%(asctime)s %(levelname)s %(name)s %(message)s",
+            rename_fields={"levelname": "level"},
+            timestamp=True,
         )
 
     def info(self, message: str, **kwargs):
@@ -112,7 +112,4 @@ class MohflowLogger:
 
     def _prepare_extra(self, extra: dict) -> dict:
         """Prepare extra fields for logging"""
-        return {
-            **extra,
-            'level': 'INFO'  # Add explicit level
-        }
+        return {**extra, "level": "INFO"}  # Add explicit level
