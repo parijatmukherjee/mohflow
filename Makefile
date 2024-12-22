@@ -21,7 +21,7 @@ TEST_DIR = tests
 VENV = .venv
 SHELL := /bin/bash
 
-.PHONY: all clean install format lint test build publish-test publish help venv
+.PHONY: all clean install format lint test build help venv
 
 # Activate virtual environment and run command
 define activate_venv
@@ -73,18 +73,6 @@ build: clean
 	$(call activate_venv, $(PYTHON) -m build)
 	@printf "$(GREEN)Build complete!$(RESET)\n"
 
-# Publish to Test PyPI
-publish-test: build
-	@printf "$(BLUE)Publishing to Test PyPI...$(RESET)\n"
-	$(call activate_venv, $(PYTHON) -m twine upload --repository testpypi dist/*)
-	@printf "$(GREEN)Test publish complete!$(RESET)\n"
-
-# Publish to PyPI
-publish: build
-	@printf "$(BLUE)Publishing to PyPI...$(RESET)\n"
-	$(call activate_venv, $(PYTHON) -m twine upload dist/*)
-	@printf "$(GREEN)Publish complete!$(RESET)\n"
-
 # Self-documenting help command
 help:
 	@printf "Available commands:\n"
@@ -94,6 +82,4 @@ help:
 	@printf "  make test        - Run tests using pytest\n"
 	@printf "  make clean       - Clean up generated files\n"
 	@printf "  make build       - Build package\n"
-	@printf "  make publish-test- Publish to Test PyPI\n"
-	@printf "  make publish     - Publish to PyPI\n"
 	@printf "  make all         - Run clean, install, format, lint, and test\n"
