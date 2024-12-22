@@ -1,26 +1,35 @@
 import logging
-import sys
 from datetime import datetime
 from typing import Optional, Dict, Any
-import logging_loki
 from pythonjsonlogger import json as jsonlogger
 from ..config import LogConfig
 from ..exceptions import ConfigurationError
+from ..handlers.loki import LokiHandler
 
 
 class MohflowLogger:
     """Main logger class for Mohflow"""
 
     def __init__(
-            self,
-            service_name: str,
-            environment: str = "development",
-            loki_url: Optional[str] = None,
-            log_level: str = "INFO",
-            console_logging: bool = True,
-            file_logging: bool = False,
-            log_file_path: Optional[str] = None
+        self,
+        service_name: str,
+        environment: str = "development",
+        loki_url: Optional[str] = None,
+        log_level: str = "INFO",
+        console_logging: bool = True,
+        file_logging: bool = False,
+        log_file_path: Optional[str] = None,
     ):
+        # Check file logging configuration first
+        if file_logging and not log_file_path:
+            raise ConfigurationError("LOG_FILE_PATH must be set when FILE_LOGGING is enabled")
+
+        # Validate log level before setting
+        try:
+            numeric_level = getattr(logging, log_level.upper())
+        except AttributeError:
+            raise ValueError(f"Invalid log level: {log_level}")
+
         self.config = LogConfig(
             SERVICE_NAME=service_name,
             ENVIRONMENT=environment,
@@ -28,7 +37,7 @@ class MohflowLogger:
             LOG_LEVEL=log_level,
             CONSOLE_LOGGING=console_logging,
             FILE_LOGGING=file_logging,
-            LOG_FILE_PATH=log_file_path
+            LOG_FILE_PATH=log_file_path,
         )
 
         self.logger = self._setup_logger()
@@ -38,58 +47,60 @@ class MohflowLogger:
         logger = logging.getLogger(self.config.SERVICE_NAME)
         logger.setLevel(getattr(logging, self.config.LOG_LEVEL.upper()))
 
+
         # Prevent duplicate logs
         logger.handlers = []
 
         # Create formatter
-        formatter = self._create_json_formatter()
+        formatter = jsonlogger.JsonFormatter(
+            fmt='%(timestamp)s %(levelname)s %(name)s %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S',
+            json_default=str
+        )
 
         # Add console handler
         if self.config.CONSOLE_LOGGING:
-            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler = logging.StreamHandler()
             console_handler.setFormatter(formatter)
             logger.addHandler(console_handler)
 
-        # Add Loki handler
-        if self.config.LOKI_URL:
-            try:
-                loki_handler = logging_loki.LokiHandler(
-                    url=self.config.LOKI_URL,
-                    tags={
-                        "service": self.config.SERVICE_NAME,
-                        "environment": self.config.ENVIRONMENT
-                    },
-                    version="1"
-                )
-                loki_handler.setFormatter(formatter)
-                logger.addHandler(loki_handler)
-            except Exception as e:
-                raise ConfigurationError(f"Failed to setup Loki logging: {str(e)}")
-
         # Add file handler
-        if self.config.FILE_LOGGING:
-            if not self.config.LOG_FILE_PATH:
-                raise ConfigurationError("LOG_FILE_PATH must be set when FILE_LOGGING is enabled")
+        if self.config.FILE_LOGGING and self.config.LOG_FILE_PATH:
             file_handler = logging.FileHandler(self.config.LOG_FILE_PATH)
             file_handler.setFormatter(formatter)
+            file_handler.setLevel(logging.INFO)
             logger.addHandler(file_handler)
+
+        # Add Loki handler
+        if self.config.LOKI_URL:
+            loki_handler = LokiHandler.setup(
+                url=self.config.LOKI_URL,
+                service_name=self.config.SERVICE_NAME,
+                environment=self.config.ENVIRONMENT,
+                formatter=formatter,
+            )
+            logger.addHandler(loki_handler)
 
         return logger
 
-    def _create_json_formatter(self) -> jsonlogger.JsonFormatter:
+    def _create_json_formatter(self):
         """Create JSON formatter for structured logging"""
         return jsonlogger.JsonFormatter(
-            fmt="%(timestamp)s %(level)s %(name)s %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
+            '%(asctime)s %(levelname)s %(name)s %(message)s',
+            rename_fields={'levelname': 'level'},
+            timestamp=True
         )
 
     def info(self, message: str, **kwargs):
         """Log info message"""
-        self.logger.info(message, extra=self._prepare_extra(kwargs))
+        extra = self._prepare_extra(kwargs)
+        self.logger.info(message, extra=extra)
 
     def error(self, message: str, exc_info: bool = True, **kwargs):
         """Log error message"""
-        self.logger.error(message, exc_info=exc_info, extra=self._prepare_extra(kwargs))
+        self.logger.error(
+            message, exc_info=exc_info, extra=self._prepare_extra(kwargs)
+        )
 
     def warning(self, message: str, **kwargs):
         """Log warning message"""
@@ -99,11 +110,9 @@ class MohflowLogger:
         """Log debug message"""
         self.logger.debug(message, extra=self._prepare_extra(kwargs))
 
-    def _prepare_extra(self, extra: Dict[str, Any]) -> Dict[str, Any]:
+    def _prepare_extra(self, extra: dict) -> dict:
         """Prepare extra fields for logging"""
         return {
             **extra,
-            "timestamp": datetime.utcnow().isoformat(),
-            "service": self.config.SERVICE_NAME,
-            "environment": self.config.ENVIRONMENT
+            'level': 'INFO'  # Add explicit level
         }

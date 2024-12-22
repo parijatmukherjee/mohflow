@@ -1,20 +1,18 @@
 # Mohflow
 
-Mohflow is a Python logging package that provides structured logging with minimal configuration. It supports console output, file logging, and Loki integration out of the box.
+Mohflow is a Python logging package that provides structured JSON logging with support for console output, file logging, and Grafana Loki integration. It's designed to be easy to use while providing powerful logging capabilities.
 
 ## Features
 
-- 📋 Structured JSON logging
+- 📋 Structured JSON logging for better log parsing
 - 🚀 Simple setup with sensible defaults
-- 🔄 Grafana Loki integration
+- 🔄 Built-in Grafana Loki integration
 - 📁 File logging support
-- 🎯 Context-rich logging with extra fields
 - 🌍 Environment-based configuration
-- ⚡ Fast and lightweight
+- 🔍 Rich context logging
+- ⚡ Lightweight and performant
 
 ## Installation
-
-Install using pip:
 
 ```bash
 pip install mohflow
@@ -35,7 +33,7 @@ logger.info("Application started")
 logger.error("An error occurred", error_code=500)
 ```
 
-## Configuration Options
+## Configuration
 
 Mohflow can be configured in multiple ways:
 
@@ -51,57 +49,7 @@ logger = MohflowLogger(
 )
 ```
 
-## Environment Variables
-
-You can also configure Mohflow using environment variables:
-
-```bash
-MOHFLOW_SERVICE_NAME="my-app"
-MOHFLOW_ENVIRONMENT="production"
-MOHFLOW_LOKI_URL="http://localhost:3100/loki/api/v1/push"
-MOHFLOW_LOG_LEVEL="INFO"
-MOHFLOW_CONSOLE_LOGGING="true"
-MOHFLOW_FILE_LOGGING="false"
-MOHFLOW_LOG_FILE_PATH="logs/app.log"
-```
-
-## Usage Examples
-
-### Basic Logging
-
-```python
-# Initialize logger
-logger = MohflowLogger(service_name="my-app")
-
-# Different log levels
-logger.info("Information message")
-logger.error("Error message")
-logger.warning("Warning message")
-logger.debug("Debug message")
-```
-
-### Logging with Context
-
-```python
-# Add extra fields to your logs
-logger.info(
-    "User logged in",
-    user_id=123,
-    ip_address="127.0.0.1",
-    login_type="oauth"
-)
-
-# Log errors with stack trace
-try:
-    # Some code that might raise an exception
-    raise ValueError("Invalid input")
-except Exception as e:
-    logger.error(
-        "Operation failed",
-        error=str(e),
-        operation="user_login"
-    )
-```
+## Examples
 
 ### FastAPI Integration
 
@@ -137,7 +85,11 @@ logger = MohflowLogger(
 )
 
 # Logs will be sent to both console and Loki
-logger.info("This message goes to Loki!", task_id=123)
+logger.info(
+    "User logged in", 
+    user_id=123,
+    ip_address="127.0.0.1"
+)
 ```
 
 ### File Logging
@@ -165,28 +117,34 @@ Logs are output in JSON format for easy parsing:
     "service": "my-app",
     "environment": "production",
     "user_id": 123,
-    "ip_address": "127.0.0.1",
-    "login_type": "oauth"
+    "ip_address": "127.0.0.1"
 }
 ```
 
-## Error Handling
+## Development
 
-Mohflow provides custom exceptions for better error handling:
+### Setup
 
-```python
-from mohflow import MohflowError, ConfigurationError
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/mohflow.git
+cd mohflow
 
-try:
-    logger = MohflowLogger(
-        service_name="my-app",
-        file_logging=True,
-        # Missing log_file_path will raise ConfigurationError
-    )
-except ConfigurationError as e:
-    print(f"Configuration error: {e}")
-except MohflowError as e:
-    print(f"General mohflow error: {e}")
+# Install development dependencies
+make install
+```
+
+### Running Tests
+
+```bash
+# Run tests with coverage
+make test
+
+# Format code
+make format
+
+# Lint code
+make lint
 ```
 
 ## Contributing

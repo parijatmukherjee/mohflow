@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional
-from pydantic import BaseSettings, validator
+from pydantic_settings import BaseSettings
 
 
 class LogConfig(BaseSettings):

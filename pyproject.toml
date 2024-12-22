@@ -9,6 +9,7 @@ description = "Simple, powerful logging for Python applications"
 authors = [{name = "Parijat Mukherjee", email = "parijat_mukherjee@live.com"}]
 readme = "README.md"
 license = {file = "LICENSE"}
+requires-python = ">=3.8"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -21,9 +22,32 @@ classifiers = [
 dependencies = [
     "python-logging-loki>=0.3.1",
     "python-json-logger>=2.0.0",
+    "pydantic>=2.0.0",
 ]
-requires-python = ">=3.8"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "build>=1.0.0",
+    "twine>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/parijatmukherjee/mohflow"
 Repository = "https://github.com/parijatmukherjee/mohflow.git"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "-v -p no:warnings --cov=mohflow --cov-report=term-missing"
+
+[tool.black]
+line-length = 79
+target-version = ['py38']
+include = '\.pyi?$'
