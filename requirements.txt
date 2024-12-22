@@ -1,0 +1,11 @@
+# Core dependencies
+python-logging-loki>=0.3.1
+python-json-logger>=2.0.0
+pydantic>=2.0.0
+
+# Development dependencies (optional)
+pytest>=7.0.0
+black>=23.0.0
+flake8>=6.0.0
+build>=1.0.0
+twine>=4.0.0
