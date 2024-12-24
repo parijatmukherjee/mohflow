@@ -53,9 +53,13 @@ class MohflowLogger:
 
         # Create formatter
         formatter = jsonlogger.JsonFormatter(
-            fmt="%(timestamp)s %(levelname)s %(name)s %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-            json_default=str,
+            fmt="%(asctime)s %(level_name)s %(name)s %(message)s",
+            rename_fields={
+                "asctime": "timestamp",
+                "level_name": "level",
+                "name": "service_name",
+            },
+            timestamp=True,
         )
 
         # Add console handler
@@ -83,14 +87,6 @@ class MohflowLogger:
 
         return logger
 
-    def _create_json_formatter(self):
-        """Create JSON formatter for structured logging"""
-        return jsonlogger.JsonFormatter(
-            "%(asctime)s %(levelname)s %(name)s %(message)s",
-            rename_fields={"levelname": "level"},
-            timestamp=True,
-        )
-
     def info(self, message: str, **kwargs):
         """Log info message"""
         extra = self._prepare_extra(kwargs)
@@ -112,4 +108,4 @@ class MohflowLogger:
 
     def _prepare_extra(self, extra: dict) -> dict:
         """Prepare extra fields for logging"""
-        return {**extra, "level": "INFO"}  # Add explicit level
+        return extra

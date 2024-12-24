@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mohflow"
-version = "0.1.0"
+version = "0.1.1"
 description = "Simple, powerful logging for Python applications"
 authors = [{name = "Parijat Mukherjee", email = "parijat_mukherjee@live.com"}]
 readme = "README.md"
@@ -23,6 +23,7 @@ dependencies = [
     "python-logging-loki>=0.3.1",
     "python-json-logger>=2.0.0",
     "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
 ]
 
 [project.optional-dependencies]
