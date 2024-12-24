@@ -90,21 +90,26 @@ class MohflowLogger:
     def info(self, message: str, **kwargs):
         """Log info message"""
         extra = self._prepare_extra(kwargs)
+        extra["level"] = "INFO"
         self.logger.info(message, extra=extra)
 
     def error(self, message: str, exc_info: bool = True, **kwargs):
         """Log error message"""
-        self.logger.error(
-            message, exc_info=exc_info, extra=self._prepare_extra(kwargs)
-        )
+        extra = self._prepare_extra(kwargs)
+        extra["level"] = "ERROR"
+        self.logger.error(message, exc_info=exc_info, extra=extra)
 
     def warning(self, message: str, **kwargs):
         """Log warning message"""
-        self.logger.warning(message, extra=self._prepare_extra(kwargs))
+        extra = self._prepare_extra(kwargs)
+        extra["level"] = "WARNING"
+        self.logger.warning(message, extra=extra)
 
     def debug(self, message: str, **kwargs):
         """Log debug message"""
-        self.logger.debug(message, extra=self._prepare_extra(kwargs))
+        extra = self._prepare_extra(kwargs)
+        extra["level"] = "DEBUG"
+        self.logger.debug(message, extra=extra)
 
     def _prepare_extra(self, extra: dict) -> dict:
         """Prepare extra fields for logging"""
