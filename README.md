@@ -132,7 +132,7 @@ Logs are output in JSON format for easy parsing:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mohflow.git
+git clone https://github.com/parijatmukherjee/mohflow.git
 cd mohflow
 
 # Install development dependencies
