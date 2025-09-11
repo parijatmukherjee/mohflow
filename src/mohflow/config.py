@@ -26,7 +26,7 @@ class LogConfig(BaseSettings):
 
     @classmethod
     def from_dict(cls, config_dict: Dict[str, Any]) -> "LogConfig":
-        """Create LogConfig from dictionary (loaded from JSON or other sources)"""
+        """Create LogConfig from dictionary (from JSON or other sources)"""
         # Map dictionary keys to expected field names
         pydantic_config = {
             "SERVICE_NAME": config_dict.get("service_name"),

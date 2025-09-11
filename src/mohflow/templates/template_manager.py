@@ -21,7 +21,8 @@ class TemplateManager:
         Initialize template manager.
 
         Args:
-            templates_dir: Path to templates directory (defaults to package templates)
+            templates_dir: Path to templates directory
+                (defaults to package templates)
         """
         if templates_dir:
             self.templates_dir = Path(templates_dir)
@@ -36,7 +37,8 @@ class TemplateManager:
         List available dashboard templates.
 
         Args:
-            platform: Platform to list templates for ("grafana", "kibana", or "all")
+            platform: Platform to list templates for
+                ("grafana", "kibana", or "all")
 
         Returns:
             Dictionary mapping platform to list of template names

@@ -154,7 +154,7 @@ class CorrelationIDManager:
         if correlation_id:
             return {
                 CONTEXT_FIELDS.CORRELATION_ID: correlation_id,
-                CONTEXT_FIELDS.REQUEST_ID: correlation_id,  # Use same value for request ID
+                CONTEXT_FIELDS.REQUEST_ID: correlation_id,  # Same value
             }
         return {}
 
@@ -169,7 +169,8 @@ class CorrelationContext:
         Initialize correlation context.
 
         Args:
-            correlation_id: Specific correlation ID to use (auto-generated if None and auto_generate is True)
+            correlation_id: Specific correlation ID to use
+                (auto-generated if None and auto_generate is True)
             auto_generate: Generate correlation ID if none provided
         """
         self.correlation_id = correlation_id
@@ -334,7 +335,9 @@ def fastapi_correlation_dependency():
         from mohflow.context.correlation import fastapi_correlation_dependency
 
         @app.get("/")
-        async def endpoint(correlation_id: str = Depends(fastapi_correlation_dependency)):
+        async def endpoint(
+            correlation_id: str = Depends(fastapi_correlation_dependency)
+        ):
             return {"correlation_id": correlation_id}
     """
     try:
