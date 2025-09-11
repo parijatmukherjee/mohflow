@@ -318,6 +318,71 @@ class TemplateManager:
         except Exception as e:
             raise ConfigurationError(f"Kibana deployment error: {e}")
 
+    def validate_template(
+        self, template: Dict[str, Any], platform: str
+    ) -> bool:
+        """Validate template structure for given platform"""
+        if platform.lower() == "grafana":
+            return self._validate_grafana_template(template)
+        elif platform.lower() == "kibana":
+            return self._validate_kibana_template(template)
+        else:
+            # Basic validation for unknown platforms
+            return isinstance(template, dict) and len(template) > 0
+
+    def get_template_info(self, template_name: str) -> Dict[str, Any]:
+        """Get detailed information about a template"""
+        template_path = None
+        platform = None
+
+        # Search in all platform directories
+        for platform_dir in self.template_dir.iterdir():
+            if platform_dir.is_dir():
+                template_file = platform_dir / f"{template_name}.json"
+                if template_file.exists():
+                    template_path = template_file
+                    platform = platform_dir.name
+                    break
+
+        if not template_path:
+            raise ConfigurationError(
+                f"Template '{template_name}' not found"
+            )
+
+        template = self.load_template(template_name)
+
+        return {
+            "name": template_name,
+            "platform": platform,
+            "path": str(template_path),
+            "size": template_path.stat().st_size,
+            "valid": self.validate_template(template, platform),
+            "description": template.get(
+                "description", "No description available"
+            ),
+        }
+
+    def template_exists(
+        self, template_name: str, platform: Optional[str] = None
+    ) -> bool:
+        """Check if a template exists"""
+        try:
+            if platform:
+                template_file = (
+                    self.template_dir / platform / f"{template_name}.json"
+                )
+                return template_file.exists()
+            else:
+                # Search in all platform directories
+                for platform_dir in self.template_dir.iterdir():
+                    if platform_dir.is_dir():
+                        template_file = platform_dir / f"{template_name}.json"
+                        if template_file.exists():
+                            return True
+                return False
+        except Exception:
+            return False
+
     def deploy_kibana_dashboard(
         self,
         template_name: str,

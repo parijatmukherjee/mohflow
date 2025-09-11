@@ -167,6 +167,10 @@ class MohflowCLI:
             return False
 
     def validate_configuration(self, config: Dict[str, Any]) -> bool:
+        """Validate configuration dictionary (alias method)"""
+        return self._validate_config_dict(config)
+
+    def _validate_config_dict(self, config: Dict[str, Any]) -> bool:
         """Validate logging configuration"""
         try:
             # Check required fields
@@ -199,6 +203,10 @@ class MohflowCLI:
             return False
 
     def create_logger(self, args) -> MohflowLogger:
+        """Create MohFlow logger (primary method)"""
+        return self._create_logger_from_args(args)
+
+    def _create_logger_from_args(self, args) -> MohflowLogger:
         """Create MohFlow logger from args"""
         try:
             logger = MohflowLogger(
@@ -216,6 +224,10 @@ class MohflowCLI:
             sys.exit(1)
 
     def test_logging_functionality(self, args) -> None:
+        """Test logging functionality (primary method)"""
+        return self._test_logging_impl(args)
+
+    def _test_logging_impl(self, args) -> None:
         """Test logging functionality with sample messages"""
         print("🧪 Testing logging functionality...")
 

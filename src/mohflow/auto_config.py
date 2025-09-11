@@ -46,8 +46,9 @@ class AutoConfigurator:
     Detects deployment context and applies appropriate logging configurations.
     """
 
-    def __init__(self):
+    def __init__(self, env_prefix: str = "MOHFLOW_"):
         self._logger = logging.getLogger(__name__)
+        self.env_prefix = env_prefix
         self._env_info: Optional[EnvironmentInfo] = None
 
     def detect_environment(self) -> EnvironmentInfo:
@@ -116,6 +117,19 @@ class AutoConfigurator:
 
         return config
 
+    def get_config(self) -> Dict[str, Any]:
+        """Alias for get_auto_config for backward compatibility"""
+        return self.get_auto_config()
+
+    def get_environment_info(self) -> EnvironmentInfo:
+        """Get environment information"""
+        return self.detect_environment()
+
+    def validate_configuration(self, config: Dict[str, Any]) -> bool:
+        """Validate configuration dictionary"""
+        required_fields = ["service_name"]
+        return all(field in config for field in required_fields)
+
     def apply_auto_configuration(
         self, base_config: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -124,6 +138,28 @@ class AutoConfigurator:
         merged_config = base_config.copy()
         merged_config.update(auto_config)
         return merged_config
+
+    def get_recommendations(
+        self, env_info: Optional[EnvironmentInfo] = None
+    ) -> Dict[str, Any]:
+        """Get configuration recommendations based on environment"""
+        if env_info is None:
+            env_info = self.detect_environment()
+
+        recommendations = {
+            "log_level": (
+                "INFO"
+                if env_info.environment_type == "production"
+                else "DEBUG"
+            ),
+            "console_logging": env_info.environment_type != "production",
+            "file_logging": env_info.environment_type == "production",
+        }
+
+        if env_info.cloud_provider:
+            recommendations["enable_cloud_logging"] = True
+
+        return recommendations
 
     def _get_system_info(self) -> Dict[str, Any]:
         """Get system information"""

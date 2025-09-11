@@ -216,11 +216,31 @@ class ConfigLoader:
                 )
 
             return True
-
         except ConfigurationError:
             raise
         except Exception as e:
-            raise ConfigurationError(f"Configuration validation error: {e}")
+            raise ConfigurationError(f"Configuration validation failed: {e}")
+
+    def load_config_from_dict(
+        self, config_dict: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Load configuration from a dictionary"""
+        merged_config = self._load_env_config()
+        merged_config.update(config_dict)
+        return merged_config
+
+    def get_config_value(self, key: str, default: Any = None) -> Any:
+        """Get a specific configuration value"""
+        config = self.load_config()
+        return config.get(key, default)
+
+    def has_config_file(self) -> bool:
+        """Check if configuration file exists"""
+        return self.config_file and Path(self.config_file).exists()
+
+    def get_env_config(self) -> Dict[str, Any]:
+        """Get environment-based configuration"""
+        return self._load_env_config()
 
     def load_config(self, **runtime_params) -> Dict[str, Any]:
         """
