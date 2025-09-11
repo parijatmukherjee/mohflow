@@ -258,6 +258,45 @@ class TemplateManager:
         except Exception as e:
             raise ConfigurationError(f"Kibana deployment error: {e}")
 
+    def deploy_kibana_dashboard(
+        self,
+        template_name: str,
+        kibana_url: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        api_key: Optional[str] = None,
+        space_id: Optional[str] = None,
+        index_pattern: Optional[str] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Deploy a Kibana dashboard template.
+
+        This is an alias for deploy_kibana_objects for consistency with
+        the convenience function naming.
+
+        Args:
+            template_name: Name of the template to deploy
+            kibana_url: Kibana instance URL
+            username: Kibana username (for basic auth)
+            password: Kibana password (for basic auth)
+            api_key: Kibana API key (alternative to username/password)
+            space_id: Kibana space ID
+            index_pattern: Index pattern (for backward compatibility)
+
+        Returns:
+            Deployment result
+        """
+        return self.deploy_kibana_objects(
+            template_name=template_name,
+            kibana_url=kibana_url,
+            username=username,
+            password=password,
+            api_key=api_key,
+            space_id=space_id,
+            **kwargs
+        )
+
     def customize_template(
         self, platform: str, template_name: str, customizations: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -396,7 +435,10 @@ def deploy_grafana_dashboard(
 
 
 def deploy_kibana_dashboard(
-    template_name: str, kibana_url: str, **kwargs
+    template_name: str,
+    kibana_url: str,
+    index_pattern: Optional[str] = None,
+    **kwargs
 ) -> Dict[str, Any]:
     """
     Convenience function to deploy Kibana dashboard.
@@ -404,13 +446,17 @@ def deploy_kibana_dashboard(
     Args:
         template_name: Name of the template
         kibana_url: Kibana URL
+        index_pattern: Index pattern (for backward compatibility)
         **kwargs: Authentication and deployment options
 
     Returns:
         Deployment result
     """
-    return default_manager.deploy_kibana_objects(
-        template_name, kibana_url, **kwargs
+    return default_manager.deploy_kibana_dashboard(
+        template_name=template_name,
+        kibana_url=kibana_url,
+        index_pattern=index_pattern,
+        **kwargs
     )
 
 
