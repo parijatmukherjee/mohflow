@@ -271,6 +271,8 @@ def is_valid_log_level(level: str) -> bool:
 
 def is_valid_environment(env: str) -> bool:
     """Check if environment is valid"""
+    if env is None:
+        return False
     return env.lower() in [e.value for e in Environment]
 
 

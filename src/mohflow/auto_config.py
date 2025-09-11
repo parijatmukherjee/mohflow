@@ -24,7 +24,7 @@ from mohflow.static_config import (
 class EnvironmentInfo:
     """Information about the detected environment"""
 
-    environment_type: str
+    environment_type: str = "development"
     cloud_provider: Optional[str] = None
     container_runtime: Optional[str] = None
     orchestrator: Optional[str] = None
@@ -106,6 +106,14 @@ class AutoConfigurator:
         if service_name:
             config["service_name"] = service_name
 
+        # Add runtime information
+        if env_info.runtime:
+            config["runtime"] = env_info.runtime
+
+        # Add orchestrator information
+        if env_info.orchestrator:
+            config["orchestrator"] = env_info.orchestrator
+
         # Add cloud-specific configurations
         if env_info.cloud_provider == "aws":
             config["region"] = env_info.region
@@ -114,6 +122,10 @@ class AutoConfigurator:
 
         if env_info.orchestrator == "kubernetes":
             config["namespace"] = env_info.namespace
+            # Add context enrichment for Kubernetes
+            config["context_enrichment"] = {
+                "include_system_info": True
+            }
 
         return config
 
@@ -177,28 +189,30 @@ class AutoConfigurator:
     def _detect_environment_type(self) -> str:
         """Detect if running in development, staging, or production"""
         # Check environment variables first
-        env_type = os.getenv("ENVIRONMENT", "").lower()
+        env_type = (os.getenv("ENVIRONMENT") or "").lower()
         if env_type in ["development", "staging", "production"]:
             return env_type
 
         # Check for common development indicators
+        hostname = socket.gethostname() or ""
         dev_indicators = [
             os.getenv("DEBUG") == "true",
             os.getenv("DEV") == "true",
             os.getenv("NODE_ENV") == "development",
-            "localhost" in socket.gethostname().lower(),
-            "dev" in socket.gethostname().lower(),
+            "localhost" in hostname.lower(),
+            "dev" in hostname.lower(),
         ]
 
         if any(dev_indicators):
             return Environment.DEVELOPMENT.value
 
         # Check for production indicators
+        cloud_provider = self._detect_cloud_provider()
         prod_indicators = [
             os.getenv("PROD") == "true",
             os.getenv("NODE_ENV") == "production",
-            "prod" in socket.gethostname().lower(),
-            self._detect_cloud_provider() is not None,
+            "prod" in hostname.lower(),
+            cloud_provider not in [None, "local"],
         ]
 
         if any(prod_indicators):
@@ -224,9 +238,8 @@ class AutoConfigurator:
         # Try to detect from metadata endpoints (with timeout)
         # In a real implementation, you'd make HTTP calls
         # to metadata endpoints with requests library
-        # For now, just return None
-
-        return None
+        # If no cloud provider detected, assume local
+        return "local"
 
     def _detect_container_runtime(self) -> Optional[str]:
         """Detect if running in a container"""

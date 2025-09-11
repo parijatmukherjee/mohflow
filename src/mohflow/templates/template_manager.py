@@ -322,6 +322,8 @@ class TemplateManager:
         self, template: Dict[str, Any], platform: str
     ) -> bool:
         """Validate template structure for given platform"""
+        if platform is None:
+            return False
         if platform.lower() == "grafana":
             return self._validate_grafana_template(template)
         elif platform.lower() == "kibana":

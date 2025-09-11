@@ -48,7 +48,7 @@ class SensitiveDataFilter:
         # Prepare field lookup set
         if not case_sensitive:
             self.sensitive_fields_lower = {
-                field.lower() for field in self.sensitive_fields
+                field.lower() for field in self.sensitive_fields if field is not None
             }
         else:
             self.sensitive_fields_lower = self.sensitive_fields
@@ -106,6 +106,8 @@ class SensitiveDataFilter:
         Returns:
             True if field is considered sensitive
         """
+        if field_name is None:
+            return False
         check_name = (
             field_name.lower() if not self.case_sensitive else field_name
         )
@@ -226,12 +228,16 @@ class SensitiveDataFilter:
 
     def add_sensitive_field(self, field_name: str):
         """Add a field name to the sensitive fields set"""
+        if field_name is None:
+            return
         self.sensitive_fields.add(field_name)
         if not self.case_sensitive:
             self.sensitive_fields_lower.add(field_name.lower())
 
     def remove_sensitive_field(self, field_name: str):
         """Remove a field name from the sensitive fields set"""
+        if field_name is None:
+            return
         self.sensitive_fields.discard(field_name)
         if not self.case_sensitive:
             self.sensitive_fields_lower.discard(field_name.lower())

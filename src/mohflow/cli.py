@@ -209,13 +209,25 @@ class MohflowCLI:
     def _create_logger_from_args(self, args) -> MohflowLogger:
         """Create MohFlow logger from args"""
         try:
-            logger = MohflowLogger(
-                service_name=args.service_name,
-                environment=getattr(args, "environment", "development"),
-                loki_url=getattr(args, "loki_url", None),
-                log_level=getattr(args, "log_level", "INFO"),
-                enable_auto_config=getattr(args, "auto_config", False),
-            )
+            # Build logger arguments, excluding None values
+            logger_kwargs = {
+                "service_name": args.service_name,
+                "environment": getattr(args, "environment", "development"),
+                "log_level": getattr(args, "log_level", "INFO"),
+                "enable_auto_config": getattr(args, "auto_config", False),
+            }
+            
+            # Only add loki_url if it's not None
+            loki_url = getattr(args, "loki_url", None)
+            if loki_url is not None:
+                logger_kwargs["loki_url"] = loki_url
+                
+            # Only add config_file if it's not None
+            config_file = getattr(args, "config_file", None)
+            if config_file is not None:
+                logger_kwargs["config_file"] = config_file
+            
+            logger = MohflowLogger(**logger_kwargs)
             print(f"✅ Logger created for service: {args.service_name}")
             return logger
 

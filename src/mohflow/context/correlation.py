@@ -134,9 +134,11 @@ class CorrelationIDManager:
         ]
 
         # Convert headers to lowercase for case-insensitive lookup
-        lower_headers = {k.lower(): v for k, v in headers.items()}
+        lower_headers = {k.lower(): v for k, v in headers.items() if k is not None}
 
         for header_name in header_names:
+            if header_name is None:
+                continue
             value = lower_headers.get(header_name.lower())
             if value:
                 return value
