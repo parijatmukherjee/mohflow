@@ -27,8 +27,10 @@ class SensitiveDataFilter:
         Initialize sensitive data filter.
 
         Args:
-            sensitive_fields: Set of field names to redact (case-insensitive by default)
-            sensitive_patterns: List of compiled regex patterns to match sensitive data
+            sensitive_fields: Set of field names to redact
+                (case-insensitive by default)
+            sensitive_patterns: List of compiled regex patterns
+                to match sensitive data
             redaction_text: Text to replace sensitive data with
             max_field_length: Maximum length for field values before truncation
             case_sensitive: Whether field name matching is case-sensitive
@@ -64,7 +66,8 @@ class SensitiveDataFilter:
             re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
             # Phone numbers (various formats)
             re.compile(
-                r"\b(?:\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b"
+                r"\b(?:\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}"
+                r"[-.\s]?[0-9]{4}\b"
             ),
             # IP addresses (IPv4)
             re.compile(REGEX_PATTERNS.IPV4_PATTERN),
@@ -85,7 +88,8 @@ class SensitiveDataFilter:
             re.compile(r"AKIA[0-9A-Z]{16}"),
             # Generic secrets (common naming patterns)
             re.compile(
-                r'(?:secret|key|token|password)["\']?\s*[:=]\s*["\']?[A-Za-z0-9+/]{20,}["\']?',
+                r'(?:secret|key|token|password)["\']?\s*[:=]\s*'
+                r'["\']?[A-Za-z0-9+/]{20,}["\']?',
                 re.IGNORECASE,
             ),
         ]
@@ -132,7 +136,8 @@ class SensitiveDataFilter:
 
         Args:
             value: Value to redact
-            partial: If True, show partial value (e.g., first/last few characters)
+            partial: If True, show partial value
+                (e.g., first/last few characters)
 
         Returns:
             Redacted value
@@ -299,10 +304,10 @@ class HTTPDataFilter(SensitiveDataFilter):
 
     def filter_http_context(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Filter complete HTTP context including headers, params, and body.
+        Filter complete HTTP context including headers, params, body.
 
         Args:
-            context: HTTP context with keys like 'headers', 'params', 'body', etc.
+            context: HTTP context with 'headers', 'params', 'body', etc.
 
         Returns:
             Filtered HTTP context

@@ -1,6 +1,6 @@
 """
 Auto-configuration module for MohFlow.
-Automatically detects environment and configures logging based on deployment context.
+Detects environment and configures logging based on deployment context.
 """
 
 import os
@@ -49,7 +49,7 @@ class AutoConfigurator:
 
     def detect_environment(self) -> EnvironmentInfo:
         """
-        Detect the current deployment environment and return environment information.
+        Detect deployment environment and return environment information.
 
         Returns:
             EnvironmentInfo with detected environment details

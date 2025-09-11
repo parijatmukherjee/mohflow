@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 MohFlow CLI module for dynamic configuration and debugging.
-Provides command-line interface for runtime log level control and configuration.
+Provides CLI for runtime log level control and configuration.
 """
 
 import argparse
@@ -135,7 +135,7 @@ class MohflowCLI:
     def merge_config(
         self, file_config: Dict[str, Any], cli_args: argparse.Namespace
     ) -> Dict[str, Any]:
-        """Merge file configuration with CLI arguments (CLI takes precedence)"""
+        """Merge file config with CLI arguments (CLI precedence)"""
         config = file_config.copy()
 
         # CLI arguments override file config
@@ -178,7 +178,8 @@ class MohflowCLI:
             log_level = config.get("log_level", "INFO").upper()
             if log_level not in valid_levels:
                 print(
-                    f"❌ Invalid log level: {log_level}. Valid options: {valid_levels}"
+                    f"❌ Invalid log level: {log_level}. "
+                    f"Valid options: {valid_levels}"
                 )
                 return False
 
@@ -229,43 +230,44 @@ class MohflowCLI:
         while True:
             try:
                 command = input("mohflow> ").strip().lower()
-
-                if command == "quit" or command == "exit":
+                if self._handle_command(command, logger):
                     break
-                elif command == "debug":
-                    logger.debug("Interactive debug message")
-                elif command == "info":
-                    logger.info("Interactive info message")
-                elif command == "warning":
-                    logger.warning("Interactive warning message")
-                elif command == "error":
-                    logger.error("Interactive error message")
-                elif command.startswith("level "):
-                    level = command.split(" ", 1)[1].upper()
-                    if level in [
-                        "DEBUG",
-                        "INFO",
-                        "WARNING",
-                        "ERROR",
-                        "CRITICAL",
-                    ]:
-                        logger.logger.setLevel(getattr(logging, level))
-                        print(f"Log level changed to {level}")
-                    else:
-                        print(
-                            "Invalid log level. Use: DEBUG, INFO, WARNING, ERROR, CRITICAL"
-                        )
-                else:
-                    print(
-                        "Unknown command. Available: debug, info, warning, error, level <LEVEL>, quit"
-                    )
-
-            except KeyboardInterrupt:
-                break
-            except EOFError:
+            except (KeyboardInterrupt, EOFError):
                 break
 
         print("\n👋 Interactive session ended")
+
+    def _handle_command(self, command: str, logger: MohflowLogger) -> bool:
+        """Handle interactive command. Returns True if should exit."""
+        if command in ["quit", "exit"]:
+            return True
+
+        if command in ["debug", "info", "warning", "error"]:
+            getattr(logger, command)(f"Interactive {command} message")
+            return False
+
+        if command.startswith("level "):
+            self._handle_level_command(command, logger)
+            return False
+
+        print(
+            "Unknown command. Available: debug, info, warning, "
+            "error, level <LEVEL>, quit"
+        )
+        return False
+
+    def _handle_level_command(self, command: str, logger: MohflowLogger):
+        """Handle log level change command"""
+        level = command.split(" ", 1)[1].upper()
+        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        if level in valid_levels:
+            logger.logger.setLevel(getattr(logging, level))
+            print(f"Log level changed to {level}")
+        else:
+            print(
+                "Invalid log level. Use: DEBUG, INFO, WARNING, "
+                "ERROR, CRITICAL"
+            )
 
     def run(self, args: Optional[list] = None) -> int:
         """Main CLI execution"""

@@ -251,7 +251,7 @@ class ConfigLoader:
         """
         sample_config = {
             "_comment": "MohFlow Configuration File",
-            "_description": "This is a sample configuration file for MohFlow logging library",
+            "_description": "Sample config file for MohFlow logging library",
             "service_name": "my-service",
             "environment": "development",
             "log_level": "INFO",

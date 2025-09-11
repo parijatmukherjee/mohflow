@@ -166,7 +166,7 @@ class MohflowLogger:
         return config_dict
 
     def _prepare_extra(self, extra: dict) -> dict:
-        """Prepare extra fields for logging with context enrichment and filtering"""
+        """Prepare extra fields for logging with enrichment and filtering"""
         enriched_extra = extra.copy()
 
         # Apply context enrichment

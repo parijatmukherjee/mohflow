@@ -132,7 +132,7 @@ class GlobalContext:
 class ContextEnricher:
     """
     Automatic context enrichment for log records.
-    Injects metadata from request context, global context, and system information.
+    Injects metadata from request, global context, and system info.
     """
 
     def __init__(
@@ -176,27 +176,40 @@ class ContextEnricher:
         """
         enriched = extra.copy()
 
-        # Add timestamp
+        self._add_timestamp_if_enabled(enriched)
+        self._add_system_info_if_enabled(enriched)
+        self._add_global_context_if_enabled(enriched)
+        self._add_request_context_if_enabled(enriched)
+        self._add_custom_enrichers(enriched)
+
+        return enriched
+
+    def _add_timestamp_if_enabled(self, enriched: Dict[str, Any]):
+        """Add timestamp if enabled"""
         if self.include_timestamp:
             enriched[CONTEXT_FIELDS.TIMESTAMP] = self._get_timestamp()
 
-        # Add system information
+    def _add_system_info_if_enabled(self, enriched: Dict[str, Any]):
+        """Add system info if enabled"""
         if self.include_system_info:
             enriched.update(self._get_system_info())
 
-        # Add global context
+    def _add_global_context_if_enabled(self, enriched: Dict[str, Any]):
+        """Add global context if enabled"""
         if self.include_global_context:
             global_ctx = _global_context.get()
             if global_ctx:
                 enriched.update(global_ctx)
 
-        # Add request context
+    def _add_request_context_if_enabled(self, enriched: Dict[str, Any]):
+        """Add request context if enabled"""
         if self.include_request_context:
             request_ctx = _request_context.get()
             if request_ctx:
                 enriched.update(request_ctx.to_dict())
 
-        # Add custom enrichers
+    def _add_custom_enrichers(self, enriched: Dict[str, Any]):
+        """Add custom enrichers"""
         for field_name, enricher_func in self.custom_enrichers.items():
             try:
                 value = enricher_func()
@@ -205,8 +218,6 @@ class ContextEnricher:
             except Exception as e:
                 # Log enricher errors but don't fail the logging operation
                 enriched[f"{field_name}_error"] = str(e)
-
-        return enriched
 
     def _get_timestamp(self) -> str:
         """Get ISO formatted timestamp"""
