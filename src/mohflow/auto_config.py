@@ -195,12 +195,13 @@ class AutoConfigurator:
 
         # Check for common development indicators
         hostname = socket.gethostname() or ""
+        hostname_lower = hostname.lower() if hostname else ""
         dev_indicators = [
             os.getenv("DEBUG") == "true",
             os.getenv("DEV") == "true",
             os.getenv("NODE_ENV") == "development",
-            "localhost" in hostname.lower(),
-            "dev" in hostname.lower(),
+            "localhost" in hostname_lower,
+            "dev" in hostname_lower,
         ]
 
         if any(dev_indicators):
@@ -211,7 +212,7 @@ class AutoConfigurator:
         prod_indicators = [
             os.getenv("PROD") == "true",
             os.getenv("NODE_ENV") == "production",
-            "prod" in hostname.lower(),
+            "prod" in hostname_lower,
             cloud_provider not in [None, "local"],
         ]
 
@@ -244,7 +245,7 @@ class AutoConfigurator:
     def _detect_container_runtime(self) -> Optional[str]:
         """Detect if running in a container"""
         # Check for Docker
-        if Path(CONTAINER_DETECTION.DOCKER_ENV_FILE).exists():
+        if os.path.exists(CONTAINER_DETECTION.DOCKER_ENV_FILE):
             return "docker"
 
         # Check for Docker environment variables
@@ -268,7 +269,7 @@ class AutoConfigurator:
         if os.getenv(CONTAINER_DETECTION.KUBERNETES_SERVICE_HOST):
             return "kubernetes"
 
-        if Path(CONTAINER_DETECTION.KUBERNETES_NAMESPACE_FILE).exists():
+        if os.path.exists(CONTAINER_DETECTION.KUBERNETES_NAMESPACE_FILE):
             return "kubernetes"
 
         # Check for Kubernetes environment variables

@@ -164,9 +164,33 @@ class ContextEnricher:
         self._cache_time: float = 0
         self._cache_ttl: float = 300  # 5 minutes cache TTL
 
-    def enrich_log_record(self, extra: Dict[str, Any]) -> Dict[str, Any]:
+    def enrich_log_record(self, record) -> "LogRecord":
         """
         Enrich log record with context information.
+
+        Args:
+            record: LogRecord object to enrich
+
+        Returns:
+            The same LogRecord object (enriched in place)
+        """
+        enriched = {}
+
+        self._add_timestamp_if_enabled(enriched)
+        self._add_system_info_if_enabled(enriched)
+        self._add_global_context_if_enabled(enriched)
+        self._add_request_context_if_enabled(enriched)
+        self._add_custom_enrichers(enriched)
+
+        # Add enriched fields to the record
+        for key, value in enriched.items():
+            setattr(record, key, value)
+
+        return record
+
+    def enrich_dict(self, extra: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Enrich dictionary with context information.
 
         Args:
             extra: Existing extra fields from log call
@@ -381,8 +405,56 @@ class GlobalContextManager:
         _global_context.set(self._previous_context)
 
 
-# Decorators for automatic context management
-def with_request_context(
+# Context management functions
+def with_request_context(context_or_request_id=None, **kwargs):
+    """
+    Create a context manager or decorator for request context.
+    
+    Usage as context manager:
+        with with_request_context(context):
+            # context is a RequestContext instance
+            
+    Usage as decorator:
+        @with_request_context(request_id="req-123")
+        def my_function():
+            pass
+    """
+    if isinstance(context_or_request_id, RequestContext):
+        # Used as context manager with RequestContext
+        return RequestContextManager(
+            request_id=context_or_request_id.request_id,
+            correlation_id=context_or_request_id.correlation_id,
+            user_id=context_or_request_id.user_id,
+            session_id=context_or_request_id.session_id,
+            operation_name=context_or_request_id.operation_name,
+            **context_or_request_id.custom_fields
+        )
+    else:
+        # Used as decorator with individual parameters
+        request_id = context_or_request_id
+        correlation_id = kwargs.get('correlation_id')
+        user_id = kwargs.get('user_id') 
+        session_id = kwargs.get('session_id')
+        operation_name = kwargs.get('operation_name')
+        custom_fields = {k: v for k, v in kwargs.items() if k not in ['correlation_id', 'user_id', 'session_id', 'operation_name']}
+        
+        def decorator(func):
+            def wrapper(*args, **func_kwargs):
+                op_name = operation_name or func.__name__
+                with RequestContextManager(
+                    request_id=request_id,
+                    correlation_id=correlation_id,
+                    user_id=user_id,
+                    session_id=session_id,
+                    operation_name=op_name,
+                    **custom_fields,
+                ):
+                    return func(*args, **func_kwargs)
+            return wrapper
+        return decorator
+
+# Legacy decorator function
+def with_request_context_decorator(
     request_id: Optional[str] = None,
     correlation_id: Optional[str] = None,
     user_id: Optional[str] = None,

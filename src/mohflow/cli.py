@@ -118,19 +118,26 @@ class MohflowCLI:
 
         return parser
 
-    def load_config_from_file(self, config_path: str) -> Dict[str, Any]:
+    def load_config_from_file(self, config_path: str, exit_on_error: bool = True) -> Dict[str, Any]:
         """Load configuration from JSON file"""
         try:
             with open(config_path, "r") as f:
                 config = json.load(f)
-            print(f"✅ Configuration loaded from {config_path}")
+            if exit_on_error:  # Only print success for CLI usage
+                print(f"✅ Configuration loaded from {config_path}")
             return config
         except FileNotFoundError:
-            print(f"❌ Configuration file not found: {config_path}")
-            sys.exit(1)
+            if exit_on_error:
+                print(f"❌ Configuration file not found: {config_path}")
+                sys.exit(1)
+            else:
+                raise
         except json.JSONDecodeError as e:
-            print(f"❌ Invalid JSON in configuration file: {e}")
-            sys.exit(1)
+            if exit_on_error:
+                print(f"❌ Invalid JSON in configuration file: {e}")
+                sys.exit(1)
+            else:
+                raise
 
     def merge_config(
         self, file_config: Dict[str, Any], cli_args: argparse.Namespace
@@ -161,7 +168,7 @@ class MohflowCLI:
     def validate_config(self, config_file: str) -> bool:
         """Validate configuration file"""
         try:
-            config = self.load_config_from_file(config_file)
+            config = self.load_config_from_file(config_file, exit_on_error=False)
             return self.validate_configuration(config)
         except Exception:
             return False

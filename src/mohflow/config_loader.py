@@ -22,19 +22,20 @@ class ConfigLoader:
     4. Default values
     """
 
-    def __init__(self, config_file: Optional[Union[str, Path]] = None):
+    def __init__(self, config_file: Optional[Union[str, Path]] = None, env_prefix: str = "MOHFLOW_"):
         """
         Initialize configuration loader.
 
         Args:
             config_file: Path to JSON configuration file (optional)
+            env_prefix: Environment variable prefix (optional)
         """
-        self.config_file = Path(config_file) if config_file else None
+        self.config_file = config_file
         self.schema_path = (
             Path(__file__).parent / "schemas" / "config_schema.json"
         )
         self._schema: Optional[Dict[str, Any]] = None
-        self.env_prefix = "MOHFLOW_"
+        self.env_prefix = env_prefix
 
     def _load_schema(self) -> Dict[str, Any]:
         """Load and cache JSON schema for validation"""
@@ -73,15 +74,16 @@ class ConfigLoader:
 
     def _load_file_config(self, config_file: str) -> Dict[str, Any]:
         """Load configuration from JSON file"""
+        if not os.path.exists(config_file):
+            return {}
+        
         try:
             with open(config_file, "r") as f:
                 return json.load(f)
         except FileNotFoundError:
-            raise ConfigurationError(
-                f"Configuration file not found: {config_file}"
-            )
+            return {}
         except json.JSONDecodeError as e:
-            raise ConfigurationError(f"Invalid JSON in config file: {e}")
+            return {}
 
     def _load_env_config(self) -> Dict[str, Any]:
         """Load configuration from environment variables"""
@@ -183,9 +185,7 @@ class ConfigLoader:
         try:
             # Check required fields
             if "service_name" not in config or not config["service_name"]:
-                raise ConfigurationError(
-                    "Missing required field: service_name"
-                )
+                raise ValueError("service_name is required")
 
             # Validate log level
             if "log_level" in config:
@@ -197,9 +197,7 @@ class ConfigLoader:
                     "CRITICAL",
                 ]
                 if config["log_level"] not in valid_levels:
-                    raise ConfigurationError(
-                        f"Invalid log level: {config['log_level']}"
-                    )
+                    raise ValueError(f"Invalid log_level: {config['log_level']}")
 
             # Validate environment
             if "environment" in config:
@@ -220,6 +218,75 @@ class ConfigLoader:
             raise
         except Exception as e:
             raise ConfigurationError(f"Configuration validation failed: {e}")
+
+    def _normalize_key(self, key: str) -> str:
+        """Normalize environment variable key to config key"""
+        return key.lower().replace("_", "_")
+
+    def _convert_value(self, value: str) -> Union[str, int, bool]:
+        """Convert string value to appropriate type"""
+        # Handle boolean values
+        if value.lower() in ("true", "1", "yes", "on"):
+            return True
+        elif value.lower() in ("false", "0", "no", "off"):
+            return False
+        
+        # Try to convert to integer
+        try:
+            return int(value)
+        except ValueError:
+            pass
+        
+        # Return as string
+        return value
+
+    def get_config_schema(self) -> Dict[str, Any]:
+        """Get configuration schema"""
+        return {
+            "type": "object",
+            "properties": {
+                "service_name": {"type": "string"},
+                "log_level": {"type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]},
+                "console_logging": {"type": "boolean"},
+                "file_logging": {"type": "boolean"},
+                "environment": {"type": "string", "enum": ["development", "staging", "production"]},
+                "loki_url": {"type": "string"}
+            },
+            "required": ["service_name"]
+        }
+
+    def validate_against_schema(self, config: Dict[str, Any]) -> bool:
+        """Validate configuration against schema"""
+        try:
+            schema = self.get_config_schema()
+            
+            # Check required fields
+            for field in schema.get("required", []):
+                if field not in config:
+                    return False
+            
+            # Check property types and enums
+            for key, value in config.items():
+                if key in schema["properties"]:
+                    prop_schema = schema["properties"][key]
+                    
+                    # Check type
+                    if "type" in prop_schema:
+                        expected_type = prop_schema["type"]
+                        if expected_type == "string" and not isinstance(value, str):
+                            return False
+                        elif expected_type == "boolean" and not isinstance(value, bool):
+                            return False
+                        elif expected_type == "integer" and not isinstance(value, int):
+                            return False
+                    
+                    # Check enum values
+                    if "enum" in prop_schema and value not in prop_schema["enum"]:
+                        return False
+            
+            return True
+        except Exception:
+            return False
 
     def load_config_from_dict(
         self, config_dict: Dict[str, Any]

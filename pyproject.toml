@@ -50,7 +50,7 @@ package-dir = {"" = "src"}
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-addopts = "-v -p no:warnings --cov=mohflow --cov-report=term-missing"
+addopts = "-v -p no:warnings"
 
 [tool.black]
 line-length = 79

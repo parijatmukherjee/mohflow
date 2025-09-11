@@ -81,6 +81,22 @@ class CorrelationIDManager:
         """
         self.auto_generate = auto_generate
 
+    def generate_id(self) -> str:
+        """Generate a new correlation ID"""
+        return generate_correlation_id()
+
+    def set_id(self, correlation_id: str):
+        """Set the correlation ID"""
+        set_correlation_id(correlation_id)
+
+    def get_id(self) -> Optional[str]:
+        """Get the current correlation ID"""
+        return get_correlation_id()
+
+    def clear_id(self):
+        """Clear the correlation ID"""
+        clear_correlation_id()
+
     def get_or_create_correlation_id(self) -> str:
         """
         Get existing correlation ID or create a new one.
