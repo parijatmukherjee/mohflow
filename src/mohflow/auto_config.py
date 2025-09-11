@@ -30,6 +30,9 @@ class EnvironmentInfo:
     orchestrator: Optional[str] = None
     region: Optional[str] = None
     instance_id: Optional[str] = None
+    runtime: Optional[str] = None
+    project_id: Optional[str] = None
+    namespace: Optional[str] = None
     metadata: Dict[str, Any] = None
 
     def __post_init__(self):
@@ -63,6 +66,9 @@ class AutoConfigurator:
         orchestrator = self._detect_orchestrator()
         region = self._detect_region(cloud_provider)
         instance_id = self._detect_instance_id(cloud_provider)
+        runtime = self._detect_runtime(cloud_provider)
+        project_id = self._detect_project_id(cloud_provider)
+        namespace = self._detect_namespace(orchestrator)
         metadata = self._collect_metadata(
             cloud_provider, container_runtime, orchestrator
         )
@@ -74,6 +80,9 @@ class AutoConfigurator:
             orchestrator=orchestrator,
             region=region,
             instance_id=instance_id,
+            runtime=runtime,
+            project_id=project_id,
+            namespace=namespace,
             metadata=metadata,
         )
 
@@ -203,6 +212,63 @@ class AutoConfigurator:
             return os.getenv("GCP_INSTANCE_ID")
         elif cloud_provider == "azure":
             return os.getenv("AZURE_INSTANCE_ID")
+
+        return None
+
+    def _detect_runtime(self, cloud_provider: Optional[str]) -> Optional[str]:
+        """Detect runtime environment"""
+        if cloud_provider == "aws":
+            aws_execution_env = os.getenv("AWS_EXECUTION_ENV")
+            if aws_execution_env:
+                return aws_execution_env
+        elif cloud_provider == "gcp":
+            gcp_runtime = os.getenv("GAE_RUNTIME")
+            if gcp_runtime:
+                return gcp_runtime
+
+        # Check for Python version
+        import platform
+
+        python_version = platform.python_version()
+        if python_version:
+            return f"python{python_version}"
+
+        return None
+
+    def _detect_project_id(
+        self, cloud_provider: Optional[str]
+    ) -> Optional[str]:
+        """Detect cloud project ID"""
+        if cloud_provider == "gcp":
+            return (
+                os.getenv("GCP_PROJECT")
+                or os.getenv("GOOGLE_CLOUD_PROJECT")
+                or os.getenv("GCLOUD_PROJECT")
+            )
+        elif cloud_provider == "aws":
+            return os.getenv("AWS_PROJECT_ID")
+        elif cloud_provider == "azure":
+            return os.getenv("AZURE_PROJECT_ID")
+
+        return None
+
+    def _detect_namespace(self, orchestrator: Optional[str]) -> Optional[str]:
+        """Detect orchestrator namespace"""
+        if orchestrator == "kubernetes":
+            # Try to read from service account
+            try:
+                namespace_file = (
+                    "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+                )
+                with open(namespace_file, "r") as f:
+                    return f.read().strip()
+            except (FileNotFoundError, PermissionError):
+                pass
+
+            # Try environment variables
+            return os.getenv("POD_NAMESPACE") or os.getenv(
+                "KUBERNETES_NAMESPACE"
+            )
 
         return None
 

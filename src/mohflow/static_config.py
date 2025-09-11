@@ -82,12 +82,16 @@ class CloudProviders:
     GCP_ENV_VARS: Tuple[str, ...] = (
         "GCP_PROJECT",
         "GOOGLE_CLOUD_PROJECT",
+        "GCLOUD_PROJECT",
         "GCP_REGION",
+        "K_SERVICE",
     )
     AZURE_ENV_VARS: Tuple[str, ...] = (
         "AZURE_RESOURCE_GROUP",
         "AZURE_SUBSCRIPTION_ID",
         "AZURE_REGION",
+        "AZURE_CLIENT_ID",
+        "WEBSITE_SITE_NAME",
     )
 
 

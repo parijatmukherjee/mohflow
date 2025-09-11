@@ -267,7 +267,7 @@ class TemplateManager:
         api_key: Optional[str] = None,
         space_id: Optional[str] = None,
         index_pattern: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Deploy a Kibana dashboard template.
@@ -294,7 +294,7 @@ class TemplateManager:
             password=password,
             api_key=api_key,
             space_id=space_id,
-            **kwargs
+            **kwargs,
         )
 
     def customize_template(
@@ -438,7 +438,7 @@ def deploy_kibana_dashboard(
     template_name: str,
     kibana_url: str,
     index_pattern: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> Dict[str, Any]:
     """
     Convenience function to deploy Kibana dashboard.
@@ -456,7 +456,7 @@ def deploy_kibana_dashboard(
         template_name=template_name,
         kibana_url=kibana_url,
         index_pattern=index_pattern,
-        **kwargs
+        **kwargs,
     )
 
 

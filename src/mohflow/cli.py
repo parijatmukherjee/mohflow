@@ -158,6 +158,14 @@ class MohflowCLI:
 
         return config
 
+    def validate_config(self, config_file: str) -> bool:
+        """Validate configuration file"""
+        try:
+            config = self.load_config_from_file(config_file)
+            return self.validate_configuration(config)
+        except Exception:
+            return False
+
     def validate_configuration(self, config: Dict[str, Any]) -> bool:
         """Validate logging configuration"""
         try:
@@ -190,29 +198,31 @@ class MohflowCLI:
             print(f"❌ Configuration validation error: {e}")
             return False
 
-    def create_logger(self, config: Dict[str, Any]) -> MohflowLogger:
-        """Create MohFlow logger from configuration"""
+    def create_logger(self, args) -> MohflowLogger:
+        """Create MohFlow logger from args"""
         try:
             logger = MohflowLogger(
-                service_name=config["service_name"],
-                environment=config.get("environment", "development"),
-                loki_url=config.get("loki_url"),
-                log_level=config.get("log_level", "INFO"),
-                console_logging=config.get("console_logging", True),
-                file_logging=config.get("file_logging", False),
-                log_file_path=config.get("log_file_path"),
+                service_name=args.service_name,
+                environment=getattr(args, "environment", "development"),
+                loki_url=getattr(args, "loki_url", None),
+                log_level=getattr(args, "log_level", "INFO"),
+                enable_auto_config=getattr(args, "auto_config", False),
             )
-            print(f"✅ Logger created for service: {config['service_name']}")
+            print(f"✅ Logger created for service: {args.service_name}")
             return logger
 
         except Exception as e:
             print(f"❌ Failed to create logger: {e}")
             sys.exit(1)
 
-    def test_logging(self, logger: MohflowLogger):
-        """Test logging with sample messages"""
-        print("🧪 Testing logging configuration...")
+    def test_logging_functionality(self, args) -> None:
+        """Test logging functionality with sample messages"""
+        print("🧪 Testing logging functionality...")
 
+        # Create logger from args
+        logger = self.create_logger(args)
+
+        # Test different log levels
         logger.debug("This is a debug message")
         logger.info("This is an info message", test=True, component="cli")
         logger.warning("This is a warning message", warning_type="test")
