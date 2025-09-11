@@ -345,9 +345,7 @@ class TemplateManager:
                     break
 
         if not template_path:
-            raise ConfigurationError(
-                f"Template '{template_name}' not found"
-            )
+            raise ConfigurationError(f"Template '{template_name}' not found")
 
         template = self.load_template(template_name)
 
