@@ -1,13 +1,17 @@
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
+from pathlib import Path
 from pythonjsonlogger import json as jsonlogger
-from ..config import LogConfig
-from ..exceptions import ConfigurationError
-from ..handlers.loki import LokiHandler
+from mohflow.config import LogConfig
+from mohflow.config_loader import ConfigLoader
+from mohflow.handlers.loki import LokiHandler
+from mohflow.context.enrichment import ContextEnricher, set_global_context
+from mohflow.context.filters import SensitiveDataFilter
+from mohflow.auto_config import auto_configure
 
 
 class MohflowLogger:
-    """Main logger class for Mohflow"""
+    """Enhanced MohFlow logger with auto-configuration and context awareness"""
 
     def __init__(
         self,
@@ -18,29 +22,58 @@ class MohflowLogger:
         console_logging: bool = True,
         file_logging: bool = False,
         log_file_path: Optional[str] = None,
+        config_file: Optional[str] = None,
+        enable_auto_config: bool = False,
+        enable_context_enrichment: bool = True,
+        enable_sensitive_data_filter: bool = True,
+        **kwargs,
     ):
-        # Check file logging configuration first
-        if file_logging and not log_file_path:
-            raise ConfigurationError(
-                "LOG_FILE_PATH must be set when FILE_LOGGING is enabled"
-            )
-
-        # Validate log level before setting
-        try:
-            getattr(logging, log_level.upper())
-        except AttributeError:
-            raise ValueError(f"Invalid log level: {log_level}")
-
-        self.config = LogConfig(
-            SERVICE_NAME=service_name,
-            ENVIRONMENT=environment,
-            LOKI_URL=loki_url,
-            LOG_LEVEL=log_level,
-            CONSOLE_LOGGING=console_logging,
-            FILE_LOGGING=file_logging,
-            LOG_FILE_PATH=log_file_path,
+        # Load configuration from multiple sources
+        config_dict = self._load_configuration(
+            service_name=service_name,
+            environment=environment,
+            loki_url=loki_url,
+            log_level=log_level,
+            console_logging=console_logging,
+            file_logging=file_logging,
+            log_file_path=log_file_path,
+            config_file=config_file,
+            enable_auto_config=enable_auto_config,
+            **kwargs,
         )
 
+        # Create LogConfig from merged configuration
+        self.config = LogConfig.from_dict(config_dict)
+
+        # Initialize components
+        self.context_enricher = None
+        self.sensitive_filter = None
+
+        if enable_context_enrichment:
+            self.context_enricher = ContextEnricher(
+                include_timestamp=config_dict.get(
+                    "context_enrichment", {}
+                ).get("include_timestamp", True),
+                include_system_info=True,
+                include_request_context=config_dict.get(
+                    "context_enrichment", {}
+                ).get("include_request_id", False),
+                include_global_context=True,
+            )
+
+            # Set global context
+            set_global_context(
+                service_name=self.config.SERVICE_NAME,
+                environment=self.config.ENVIRONMENT,
+                **config_dict.get("context_enrichment", {}).get(
+                    "custom_fields", {}
+                ),
+            )
+
+        if enable_sensitive_data_filter:
+            self.sensitive_filter = SensitiveDataFilter()
+
+        # Setup logger
         self.logger = self._setup_logger()
 
     def _setup_logger(self) -> logging.Logger:
@@ -111,6 +144,87 @@ class MohflowLogger:
         extra["level"] = "DEBUG"
         self.logger.debug(message, extra=extra)
 
+    def _load_configuration(
+        self,
+        config_file: Optional[str] = None,
+        enable_auto_config: bool = False,
+        **params,
+    ) -> Dict[str, Any]:
+        """Load configuration from multiple sources with proper precedence"""
+        # Load base configuration
+        if config_file:
+            loader = ConfigLoader(Path(config_file))
+        else:
+            loader = ConfigLoader()
+
+        config_dict = loader.load_config(**params)
+
+        # Apply auto-configuration if enabled
+        if enable_auto_config:
+            config_dict = auto_configure(config_dict)
+
+        return config_dict
+
     def _prepare_extra(self, extra: dict) -> dict:
-        """Prepare extra fields for logging"""
-        return extra
+        """Prepare extra fields for logging with context enrichment and filtering"""
+        enriched_extra = extra.copy()
+
+        # Apply context enrichment
+        if self.context_enricher:
+            enriched_extra = self.context_enricher.enrich_log_record(
+                enriched_extra
+            )
+
+        # Apply sensitive data filtering
+        if self.sensitive_filter:
+            enriched_extra = self.sensitive_filter.filter_log_record(
+                enriched_extra
+            )
+
+        return enriched_extra
+
+    def set_context(self, **context_fields):
+        """Set global context fields for all future log messages"""
+        set_global_context(**context_fields)
+
+    def add_custom_enricher(self, field_name: str, enricher_func):
+        """Add a custom field enricher"""
+        if self.context_enricher:
+            self.context_enricher.add_custom_enricher(
+                field_name, enricher_func
+            )
+
+    def add_sensitive_field(self, field_name: str):
+        """Add a field name to the sensitive data filter"""
+        if self.sensitive_filter:
+            self.sensitive_filter.add_sensitive_field(field_name)
+
+    def get_environment_info(self) -> Dict[str, Any]:
+        """Get information about the detected environment"""
+        from mohflow.auto_config import get_environment_summary
+
+        return get_environment_summary()
+
+    @classmethod
+    def from_config_file(
+        cls, config_file: str, **overrides
+    ) -> "MohflowLogger":
+        """Create logger instance from JSON configuration file"""
+        # Load config to get service name (required parameter)
+        loader = ConfigLoader(Path(config_file))
+        config_dict = loader.load_config(**overrides)
+
+        return cls(
+            service_name=config_dict["service_name"],
+            config_file=config_file,
+            **overrides,
+        )
+
+    @classmethod
+    def with_auto_config(
+        cls, service_name: str, **overrides
+    ) -> "MohflowLogger":
+        """Create logger instance with automatic environment configuration"""
+        return cls(
+            service_name=service_name, enable_auto_config=True, **overrides
+        )

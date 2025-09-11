@@ -5,13 +5,30 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      python_version:
+        description: 'Python version to test with'
+        required: false
+        default: '3.10'
+        type: choice
+        options:
+          - '3.8'
+          - '3.9'
+          - '3.10'
+          - '3.11'
+      run_coverage:
+        description: 'Run coverage report'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ${{ github.event_name == 'workflow_dispatch' && fromJson(format('["{0}"]', inputs.python_version)) || fromJson('["3.8", "3.9", "3.10", "3.11"]') }}
 
     steps:
     - uses: actions/checkout@v5
@@ -37,7 +54,11 @@ jobs:
 
     - name: Run tests with pytest
       run: |
-        pytest tests/ --cov=mohflow --cov-report=xml
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.run_coverage }}" = "false" ]; then
+          pytest tests/
+        else
+          pytest tests/ --cov=mohflow --cov-report=xml
+        fi
 
   publish:
     needs: test

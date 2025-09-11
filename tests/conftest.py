@@ -5,7 +5,9 @@ from mohflow import MohflowLogger
 @pytest.fixture
 def basic_logger():
     """Returns a basic console-only logger"""
-    return MohflowLogger(service_name="test-service")
+    return MohflowLogger(
+        service_name="test-service", enable_sensitive_data_filter=False
+    )
 
 
 @pytest.fixture

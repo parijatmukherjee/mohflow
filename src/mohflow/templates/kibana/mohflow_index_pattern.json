@@ -1,0 +1,17 @@
+{
+  "version": "8.0.0",
+  "objects": [
+    {
+      "id": "mohflow-*",
+      "type": "index-pattern",
+      "attributes": {
+        "title": "mohflow-*",
+        "timeFieldName": "timestamp",
+        "fields": "[{\"name\":\"@timestamp\",\"type\":\"date\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"@version\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"level\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"message\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":false},{\"name\":\"service_name\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"environment\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"timestamp\",\"type\":\"date\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"request_id\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"correlation_id\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"user_id\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"session_id\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"hostname\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"process_id\",\"type\":\"number\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"thread_id\",\"type\":\"number\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"cloud_provider\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"cloud_region\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"instance_id\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"container_id\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"pod_name\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"namespace\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"operation_name\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"error_code\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"response_time\",\"type\":\"number\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"path\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"method\",\"type\":\"string\",\"searchable\":true,\"aggregatable\":true},{\"name\":\"status_code\",\"type\":\"number\",\"searchable\":true,\"aggregatable\":true}]",
+        "sourceFilters": "[]",
+        "fieldFormatMap": "{\"timestamp\":{\"id\":\"date\"},\"@timestamp\":{\"id\":\"date\"},\"response_time\":{\"id\":\"number\",\"params\":{\"pattern\":\"0,0.00\"}}}",
+        "runtimeFieldMap": "{}"
+      }
+    }
+  ]
+}

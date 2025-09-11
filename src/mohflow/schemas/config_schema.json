@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MohFlow Configuration Schema",
+  "description": "Configuration schema for MohFlow logging library",
+  "type": "object",
+  "properties": {
+    "service_name": {
+      "type": "string",
+      "description": "Name of the service for logging identification",
+      "minLength": 1
+    },
+    "environment": {
+      "type": "string",
+      "description": "Environment context for logging",
+      "enum": ["development", "staging", "production"],
+      "default": "development"
+    },
+    "log_level": {
+      "type": "string",
+      "description": "Logging level",
+      "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+      "default": "INFO"
+    },
+    "console_logging": {
+      "type": "boolean",
+      "description": "Enable console output",
+      "default": true
+    },
+    "file_logging": {
+      "type": "boolean",
+      "description": "Enable file logging",
+      "default": false
+    },
+    "log_file_path": {
+      "type": "string",
+      "description": "Path to log file (required if file_logging is true)",
+      "minLength": 1
+    },
+    "loki_url": {
+      "type": "string",
+      "description": "Loki endpoint URL for centralized logging",
+      "format": "uri"
+    },
+    "auto_configuration": {
+      "type": "object",
+      "description": "Auto-configuration settings",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable auto-configuration based on environment",
+          "default": false
+        },
+        "detect_environment": {
+          "type": "boolean",
+          "description": "Automatically detect deployment environment",
+          "default": true
+        },
+        "cloud_metadata": {
+          "type": "boolean",
+          "description": "Include cloud provider metadata",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "context_enrichment": {
+      "type": "object",
+      "description": "Context enrichment settings",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable automatic context enrichment",
+          "default": true
+        },
+        "include_timestamp": {
+          "type": "boolean",
+          "description": "Include standardized timestamps",
+          "default": true
+        },
+        "include_request_id": {
+          "type": "boolean",
+          "description": "Include request correlation IDs",
+          "default": false
+        },
+        "include_user_context": {
+          "type": "boolean",
+          "description": "Include user/session context",
+          "default": false
+        },
+        "custom_fields": {
+          "type": "object",
+          "description": "Custom fields to include in all logs",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "handlers": {
+      "type": "object",
+      "description": "Custom handler configurations",
+      "properties": {
+        "loki": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean", "default": true},
+            "batch_size": {"type": "integer", "minimum": 1, "default": 100},
+            "timeout": {"type": "number", "minimum": 0, "default": 10},
+            "extra_tags": {
+              "type": "object",
+              "additionalProperties": {"type": "string"}
+            }
+          },
+          "additionalProperties": false
+        },
+        "file": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean", "default": true},
+            "rotation": {"type": "boolean", "default": false},
+            "max_size_mb": {"type": "integer", "minimum": 1, "default": 100},
+            "backup_count": {"type": "integer", "minimum": 0, "default": 5}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["service_name"],
+  "if": {
+    "properties": {"file_logging": {"const": true}}
+  },
+  "then": {
+    "required": ["log_file_path"]
+  },
+  "additionalProperties": false
+}

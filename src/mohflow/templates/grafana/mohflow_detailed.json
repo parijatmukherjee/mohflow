@@ -1,0 +1,270 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "MohFlow - Detailed Analysis Dashboard",
+    "tags": ["mohflow", "logging", "detailed", "analysis"],
+    "style": "dark",
+    "timezone": "browser",
+    "editable": true,
+    "hideControls": false,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "service",
+          "type": "query",
+          "label": "Service",
+          "query": "label_values(service)",
+          "refresh": 1,
+          "multi": false,
+          "includeAll": false
+        },
+        {
+          "name": "environment",
+          "type": "query",
+          "label": "Environment", 
+          "query": "label_values({service=\"$service\"}, environment)",
+          "refresh": 1,
+          "multi": false,
+          "includeAll": false
+        }
+      ]
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Response Time Distribution",
+        "type": "heatmap",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "sum(rate({service=\"$service\", environment=\"$environment\"} | json | response_time != \"\" | unwrap response_time [5m])) by (le)",
+            "refId": "A"
+          }
+        ],
+        "heatmap": {
+          "xBucketSize": "1m",
+          "yBucketSize": "100ms",
+          "yBucketBound": "upper"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Error Types Distribution",
+        "type": "piechart",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "targets": [
+          {
+            "expr": "sum by (error_code) (count_over_time({service=\"$service\", environment=\"$environment\", level=\"ERROR\"} | json | error_code != \"\" [6h]))",
+            "legendFormat": "{{error_code}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Request Volume by Path",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        },
+        "targets": [
+          {
+            "expr": "sum(rate({service=\"$service\", environment=\"$environment\"} | json | path != \"\" [1m])) by (path)",
+            "legendFormat": "{{path}}",
+            "refId": "A"
+          }
+        ],
+        "legend": {
+          "show": true,
+          "alignAsTable": true,
+          "rightSide": true,
+          "values": true,
+          "avg": true,
+          "max": true
+        }
+      },
+      {
+        "id": 4,
+        "title": "User Activity",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "targets": [
+          {
+            "expr": "count(count by (user_id) ({service=\"$service\", environment=\"$environment\"} | json | user_id != \"\" [$__interval]))",
+            "legendFormat": "Active Users",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Active Users",
+            "show": true
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Geographic Distribution",
+        "type": "worldmap",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        },
+        "targets": [
+          {
+            "expr": "sum by (country) (count_over_time({service=\"$service\", environment=\"$environment\"} | json | country != \"\" [1h]))",
+            "legendFormat": "{{country}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Performance Metrics",
+        "type": "table",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 24
+        },
+        "targets": [
+          {
+            "expr": "topk(20, sum by (operation_name) (rate({service=\"$service\", environment=\"$environment\"} | json | operation_name != \"\" [5m])))",
+            "format": "table",
+            "refId": "A"
+          },
+          {
+            "expr": "avg by (operation_name) ({service=\"$service\", environment=\"$environment\"} | json | response_time != \"\" | unwrap response_time)",
+            "format": "table", 
+            "refId": "B"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge",
+            "options": {}
+          }
+        ],
+        "options": {
+          "showHeader": true
+        },
+        "fieldConfig": {
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Value #A"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Requests/sec"
+                },
+                {
+                  "id": "unit",
+                  "value": "reqps"
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Value #B"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Avg Response Time"
+                },
+                {
+                  "id": "unit",
+                  "value": "ms"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 7,
+        "title": "Error Timeline",
+        "type": "graph",
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 32
+        },
+        "targets": [
+          {
+            "expr": "sum(rate({service=\"$service\", environment=\"$environment\", level=\"ERROR\"} [1m]))",
+            "legendFormat": "Total Errors",
+            "refId": "A"
+          },
+          {
+            "expr": "sum by (error_code) (rate({service=\"$service\", environment=\"$environment\", level=\"ERROR\"} | json | error_code != \"\" [1m]))",
+            "legendFormat": "{{error_code}}",
+            "refId": "B"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [0.1],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "2m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "High Error Rate Alert",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 16,
+    "version": 1
+  }
+}

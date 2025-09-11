@@ -1,6 +1,6 @@
 import logging
 import logging_loki
-from ..exceptions import ConfigurationError
+from mohflow.exceptions import ConfigurationError
 from typing import Dict, Any
 
 
