@@ -34,6 +34,7 @@ class ConfigLoader:
             Path(__file__).parent / "schemas" / "config_schema.json"
         )
         self._schema: Optional[Dict[str, Any]] = None
+        self.env_prefix = "MOHFLOW_"
 
     def _load_schema(self) -> Dict[str, Any]:
         """Load and cache JSON schema for validation"""
@@ -69,6 +70,18 @@ class ConfigLoader:
             )
         except Exception as e:
             raise ConfigurationError(f"Error reading configuration file: {e}")
+
+    def _load_file_config(self, config_file: str) -> Dict[str, Any]:
+        """Load configuration from JSON file"""
+        try:
+            with open(config_file, "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            raise ConfigurationError(
+                f"Configuration file not found: {config_file}"
+            )
+        except json.JSONDecodeError as e:
+            raise ConfigurationError(f"Invalid JSON in config file: {e}")
 
     def _load_env_config(self) -> Dict[str, Any]:
         """Load configuration from environment variables"""

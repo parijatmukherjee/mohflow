@@ -101,6 +101,66 @@ class TemplateManager:
                 f"Failed to load template {template_name}: {e}"
             )
 
+    def get_available_templates(
+        self, platform: Optional[str] = None
+    ) -> Dict[str, List[str]]:
+        """Get available templates (alias for list_templates)"""
+        return self.list_templates(platform)
+
+    def _validate_grafana_template(self, template: Dict[str, Any]) -> bool:
+        """Validate Grafana template structure"""
+        required_fields = ["dashboard"]
+        return all(field in template for field in required_fields)
+
+    def _validate_kibana_template(self, template: Dict[str, Any]) -> bool:
+        """Validate Kibana template structure"""
+        required_fields = ["objects"]
+        return all(field in template for field in required_fields)
+
+    def _replace_variables(
+        self, template: Dict[str, Any], variables: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Replace variables in template"""
+        import json
+
+        template_str = json.dumps(template)
+        for key, value in variables.items():
+            template_str = template_str.replace(f"${{{key}}}", str(value))
+        return json.loads(template_str)
+
+    def _check_grafana_connectivity(
+        self, grafana_url: str, api_key: str
+    ) -> bool:
+        """Check if Grafana is accessible"""
+        try:
+            import requests
+
+            response = requests.get(
+                f"{grafana_url}/api/health",
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=5,
+            )
+            return response.status_code == 200
+        except Exception:
+            return False
+
+    def _check_kibana_connectivity(
+        self, kibana_url: str, **auth_kwargs
+    ) -> bool:
+        """Check if Kibana is accessible"""
+        try:
+            import requests
+
+            headers = {}
+            if "api_key" in auth_kwargs:
+                headers["Authorization"] = f"ApiKey {auth_kwargs['api_key']}"
+            response = requests.get(
+                f"{kibana_url}/api/status", headers=headers, timeout=5
+            )
+            return response.status_code == 200
+        except Exception:
+            return False
+
     def deploy_grafana_dashboard(
         self,
         template_name: str,

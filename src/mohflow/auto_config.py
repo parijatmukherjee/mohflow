@@ -88,6 +88,56 @@ class AutoConfigurator:
 
         return self._env_info
 
+    def get_auto_config(
+        self,
+        env_info: Optional[EnvironmentInfo] = None,
+        service_name: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Get automatic configuration based on environment detection"""
+        if env_info is None:
+            env_info = self.detect_environment()
+
+        config = {
+            "environment": env_info.environment_type,
+            "cloud_provider": env_info.cloud_provider,
+        }
+
+        if service_name:
+            config["service_name"] = service_name
+
+        # Add cloud-specific configurations
+        if env_info.cloud_provider == "aws":
+            config["region"] = env_info.region
+        elif env_info.cloud_provider == "gcp":
+            config["project_id"] = env_info.project_id
+
+        if env_info.orchestrator == "kubernetes":
+            config["namespace"] = env_info.namespace
+
+        return config
+
+    def apply_auto_configuration(
+        self, base_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Apply auto-configuration to base configuration"""
+        auto_config = self.get_auto_config()
+        merged_config = base_config.copy()
+        merged_config.update(auto_config)
+        return merged_config
+
+    def _get_system_info(self) -> Dict[str, Any]:
+        """Get system information"""
+        import platform
+        import socket
+        import os
+
+        return {
+            "hostname": socket.gethostname(),
+            "platform": platform.platform(),
+            "python_version": platform.python_version(),
+            "process_id": os.getpid(),
+        }
+
     def _detect_environment_type(self) -> str:
         """Detect if running in development, staging, or production"""
         # Check environment variables first
