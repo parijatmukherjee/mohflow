@@ -163,11 +163,7 @@ class OpenTelemetryEnricher:
     def _get_baggage_field_name(self, key: str) -> str:
         """Get the field name for a baggage key, applying prefix if
         configured."""
-        return (
-            f"{self.baggage_prefix}{key}"
-            if self.baggage_prefix
-            else key
-        )
+        return f"{self.baggage_prefix}{key}" if self.baggage_prefix else key
 
     def enrich_record(self, record: logging.LogRecord) -> logging.LogRecord:
         """Enrich log record with OpenTelemetry trace context."""
