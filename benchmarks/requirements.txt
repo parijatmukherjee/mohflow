@@ -1,0 +1,15 @@
+# Benchmark dependencies for comparing against other logging libraries
+
+# Core benchmarking libraries
+psutil>=5.9.0          # For memory profiling
+loguru>=0.7.0          # High-performance logging library
+structlog>=23.0.0      # Structured logging library
+python-json-logger>=2.0.0  # JSON formatter for standard logging
+
+# Optional high-performance alternatives
+picologging>=0.9.0     # Faster drop-in replacement for logging
+
+# Additional test utilities  
+pytest>=7.0.0          # For running benchmark tests
+pytest-benchmark>=4.0.0  # Pytest benchmark integration
+memory-profiler>=0.61.0   # Alternative memory profiling

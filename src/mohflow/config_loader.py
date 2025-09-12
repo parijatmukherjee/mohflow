@@ -90,7 +90,8 @@ class ConfigLoader:
 
         try:
             with open(config_file, "r") as f:
-                return json.load(f)
+                data = json.load(f)
+                return data if isinstance(data, dict) else {}
         except FileNotFoundError:
             return {}
         except json.JSONDecodeError:
@@ -135,22 +136,26 @@ class ConfigLoader:
                 # Handle nested keys (e.g., CONTEXT_ENRICHMENT_INCLUDE_TIMESTAMP)  # noqa: E501
                 if "_" in config_key:
                     parts = config_key.split("_")
-                    current = env_config
+                    current: Dict[str, Any] = env_config
 
                     # Navigate/create nested structure
                     for part in parts[:-1]:
                         if part not in current:
                             current[part] = {}
-                        current = current[part]
-
-                    # Set the final value with type conversion
-                    final_key = parts[-1]
-                    if value.lower() in ("true", "false"):
-                        current[final_key] = value.lower() == "true"
-                    elif value.isdigit():
-                        current[final_key] = int(value)
+                        if isinstance(current[part], dict):
+                            current = current[part]
+                        else:
+                            # Skip if we encounter non-dict value
+                            break
                     else:
-                        current[final_key] = value
+                        # Set the final value with type conversion
+                        final_key = parts[-1]
+                        if value.lower() in ("true", "false"):
+                            current[final_key] = value.lower() == "true"
+                        elif value.isdigit():
+                            current[final_key] = int(value)
+                        else:
+                            current[final_key] = value
 
         return env_config
 
@@ -194,7 +199,7 @@ class ConfigLoader:
         Merge multiple configuration dictionaries.
         Later configs override earlier ones.
         """
-        merged = {}
+        merged: Dict[str, Any] = {}
 
         for config in configs:
             if not config:
@@ -357,13 +362,15 @@ class ConfigLoader:
 
     def has_config_file(self) -> bool:
         """Check if configuration file exists"""
-        return self.config_file and Path(self.config_file).exists()
+        if self.config_file:
+            return Path(self.config_file).exists()
+        return False
 
     def get_env_config(self) -> Dict[str, Any]:
         """Get environment-based configuration"""
         return self._load_env_config()
 
-    def load_config(self, **runtime_params) -> Dict[str, Any]:
+    def load_config(self, **runtime_params: Any) -> Dict[str, Any]:
         """
         Load and merge configuration from all sources.
 
@@ -461,7 +468,7 @@ class ConfigLoader:
 
 # Convenience function for quick configuration loading
 def load_config(
-    config_file: Optional[Union[str, Path]] = None, **kwargs
+    config_file: Optional[Union[str, Path]] = None, **kwargs: Any
 ) -> Dict[str, Any]:
     """
     Convenience function to load configuration.

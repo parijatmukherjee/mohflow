@@ -17,6 +17,7 @@ from mohflow.static_config import (
     Environment,
     DEFAULT_PORTS,
 )
+from mohflow.framework_detection import FrameworkDetector
 
 
 @dataclass
@@ -49,6 +50,7 @@ class AutoConfigurator:
         self._logger = logging.getLogger(__name__)
         self.env_prefix = env_prefix
         self._env_info: Optional[EnvironmentInfo] = None
+        self._framework_detector = FrameworkDetector()
 
     def detect_environment(self) -> EnvironmentInfo:
         """
@@ -420,7 +422,8 @@ class AutoConfigurator:
 
     def auto_configure(self, base_config: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Apply auto-configuration based on detected environment.
+        Apply intelligent auto-configuration based on detected environment
+        and frameworks.
 
         Args:
             base_config: Base configuration to enhance
@@ -440,7 +443,120 @@ class AutoConfigurator:
         self._apply_container_config(config, env_info)
         self._apply_performance_config(config, env_info)
 
+        # NEW: Apply framework-specific configurations
+        self._apply_framework_config(config, env_info)
+
         return config
+
+    def get_intelligent_config(
+        self, base_config: Dict[str, Any], service_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Get intelligent configuration combining environment and framework
+        detection.
+
+        Args:
+            base_config: Base configuration to enhance
+            service_name: Service name for the logger
+
+        Returns:
+            Optimized configuration for detected environment and frameworks
+        """
+        # Start with auto-configuration
+        config = self.auto_configure(base_config)
+
+        # Get framework optimizations
+        framework_config = self._framework_detector.get_optimized_config()
+
+        # Merge framework config with intelligent priority
+        config = self._merge_configs_intelligently(config, framework_config)
+
+        # Add service name if provided
+        if service_name:
+            config["service_name"] = service_name
+
+        # Add framework metadata for context
+        app_info = self._framework_detector.detect_application_type()
+        if "context_enrichment" not in config:
+            config["context_enrichment"] = {}
+
+        config["context_enrichment"]["custom_fields"] = config[
+            "context_enrichment"
+        ].get("custom_fields", {})
+        config["context_enrichment"]["custom_fields"].update(
+            {
+                "app_type": app_info.app_type,
+                "deployment_type": app_info.deployment_type,
+                "framework_count": len(app_info.frameworks),
+            }
+        )
+
+        return config
+
+    def get_framework_recommendations(self) -> Dict[str, Any]:
+        """
+        Get framework-specific recommendations for optimal logging setup.
+
+        Returns:
+            Dictionary with recommendations and explanations
+        """
+        app_info = self._framework_detector.detect_application_type()
+        frameworks = app_info.frameworks
+
+        recommendations = {
+            "detected_app_type": app_info.app_type,
+            "deployment_type": app_info.deployment_type,
+            "frameworks": [],
+            "recommendations": {},
+            "integration_tips": [],
+            "performance_notes": [],
+        }
+
+        # Framework-specific recommendations
+        for framework in frameworks:
+            framework_rec = {
+                "name": framework.name,
+                "version": framework.version,
+                "recommended_formatter": framework.recommended_formatter,
+                "supports_async": framework.is_async,
+                "integration_notes": framework.integration_notes,
+            }
+            recommendations["frameworks"].append(framework_rec)
+
+            # Add integration tips
+            if framework.integration_notes:
+                recommendations["integration_tips"].append(
+                    f"{framework.name}: {framework.integration_notes}"
+                )
+
+        # General recommendations based on app type
+        if app_info.app_type == "web":
+            recommendations["recommendations"]["formatter"] = "structured"
+            recommendations["recommendations"][
+                "enable_request_correlation"
+            ] = True
+            recommendations["performance_notes"].append(
+                "Web apps benefit from request correlation and structured "
+                "logging"
+            )
+
+        elif app_info.app_type == "api":
+            recommendations["recommendations"]["formatter"] = "fast"
+            recommendations["recommendations"]["async_handlers"] = True
+            recommendations["performance_notes"].append(
+                "API services need fast, non-blocking logging for high "
+                "throughput"
+            )
+
+        elif app_info.uses_async:
+            recommendations["recommendations"]["async_handlers"] = True
+            recommendations["recommendations"]["formatter"] = "fast"
+            recommendations["performance_notes"].append(
+                "Async applications require async-safe handlers to avoid "
+                "blocking"
+            )
+
+        return recommendations
 
     def _apply_environment_config(
         self, config: Dict[str, Any], env_info: EnvironmentInfo
@@ -626,8 +742,11 @@ class AutoConfigurator:
         return None
 
     def get_environment_summary(self) -> Dict[str, Any]:
-        """Get a summary of the detected environment for logging/debugging"""
+        """Get a comprehensive summary of the detected environment and
+        frameworks"""
         env_info = self.detect_environment()
+        app_info = self._framework_detector.detect_application_type()
+
         return {
             "environment_type": env_info.environment_type,
             "cloud_provider": env_info.cloud_provider,
@@ -636,7 +755,97 @@ class AutoConfigurator:
             "region": env_info.region,
             "hostname": env_info.metadata.get("hostname"),
             "platform": env_info.metadata.get("platform"),
+            # Framework information
+            "app_type": app_info.app_type,
+            "deployment_type": app_info.deployment_type,
+            "frameworks": [f.name for f in app_info.frameworks],
+            "uses_async": app_info.uses_async,
+            "capabilities": {
+                "database": app_info.has_database,
+                "cache": app_info.has_cache,
+                "message_queue": app_info.has_message_queue,
+                "external_apis": app_info.has_external_apis,
+            },
         }
+
+    def _apply_framework_config(
+        self, config: Dict[str, Any], env_info: EnvironmentInfo
+    ):
+        """Apply framework-specific configurations."""
+        try:
+            framework_config = self._framework_detector.get_optimized_config()
+
+            # Apply framework config with environment-aware merging
+            for key, value in framework_config.items():
+                if key == "context_enrichment":
+                    # Deep merge context enrichment
+                    if "context_enrichment" not in config:
+                        config["context_enrichment"] = {}
+
+                    for sub_key, sub_value in value.items():
+                        if sub_key == "custom_fields":
+                            if (
+                                "custom_fields"
+                                not in config["context_enrichment"]
+                            ):
+                                config["context_enrichment"][
+                                    "custom_fields"
+                                ] = {}
+                            config["context_enrichment"][
+                                "custom_fields"
+                            ].update(sub_value)
+                        else:
+                            config["context_enrichment"][sub_key] = sub_value
+                else:
+                    # Simple override for other config values
+                    config.setdefault(key, value)
+
+        except Exception as e:
+            # Gracefully handle framework detection errors
+            self._logger.debug(f"Framework config application failed: {e}")
+
+    def _merge_configs_intelligently(
+        self, base_config: Dict[str, Any], framework_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Intelligently merge configurations with priority rules.
+
+        Framework-specific settings generally take precedence, but environment
+        settings override when there are conflicts.
+        """
+        merged_config = base_config.copy()
+
+        for key, value in framework_config.items():
+            if key in merged_config:
+                # Handle special merge cases
+                if key == "context_enrichment" and isinstance(value, dict):
+                    # Deep merge context enrichment
+                    if key not in merged_config:
+                        merged_config[key] = {}
+
+                    for sub_key, sub_value in value.items():
+                        if sub_key == "custom_fields":
+                            if sub_key not in merged_config[key]:
+                                merged_config[key][sub_key] = {}
+                            merged_config[key][sub_key].update(sub_value)
+                        else:
+                            # Framework setting takes precedence for
+                            # non-custom fields
+                            merged_config[key][sub_key] = sub_value
+
+                elif key in ["formatter_type", "async_handlers"]:
+                    # Framework preferences for performance settings
+                    # take precedence
+                    merged_config[key] = value
+
+                else:
+                    # Environment settings generally take precedence
+                    pass  # Keep base_config value
+            else:
+                # New setting from framework
+                merged_config[key] = value
+
+        return merged_config
 
 
 # Singleton instance for easy access
@@ -654,6 +863,20 @@ def auto_configure(base_config: Dict[str, Any]) -> Dict[str, Any]:
     return _auto_configurator.auto_configure(base_config)
 
 
+def get_intelligent_config(
+    base_config: Dict[str, Any], service_name: Optional[str] = None
+) -> Dict[str, Any]:
+    """Convenience function to get intelligent configuration with
+    framework detection"""
+    return _auto_configurator.get_intelligent_config(base_config, service_name)
+
+
+def get_framework_recommendations() -> Dict[str, Any]:
+    """Convenience function to get framework-specific
+    recommendations"""
+    return _auto_configurator.get_framework_recommendations()
+
+
 def get_environment_summary() -> Dict[str, Any]:
-    """Convenience function to get environment summary"""
+    """Get comprehensive environment and framework summary."""
     return _auto_configurator.get_environment_summary()
