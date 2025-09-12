@@ -160,6 +160,15 @@ class OpenTelemetryEnricher:
 
         self._otel_available = HAS_OPENTELEMETRY
 
+    def _get_baggage_field_name(self, key: str) -> str:
+        """Get the field name for a baggage key, applying prefix if
+        configured."""
+        return (
+            f"{self.baggage_prefix}{key}"
+            if self.baggage_prefix
+            else key
+        )
+
     def enrich_record(self, record: logging.LogRecord) -> logging.LogRecord:
         """Enrich log record with OpenTelemetry trace context."""
         if not self._otel_available:
@@ -199,11 +208,7 @@ class OpenTelemetryEnricher:
         # Add baggage items
         if self.include_baggage and trace_context.baggage:
             for key, value in trace_context.baggage.items():
-                field_name = (
-                    f"{self.baggage_prefix}{key}"
-                    if self.baggage_prefix
-                    else key
-                )
+                field_name = self._get_baggage_field_name(key)
                 setattr(record, field_name, value)
 
         return record
@@ -241,11 +246,7 @@ class OpenTelemetryEnricher:
         # Add baggage items
         if self.include_baggage and trace_context.baggage:
             for key, value in trace_context.baggage.items():
-                field_name = (
-                    f"{self.baggage_prefix}{key}"
-                    if self.baggage_prefix
-                    else key
-                )
+                field_name = self._get_baggage_field_name(key)
                 enriched_data[field_name] = value
 
         return enriched_data

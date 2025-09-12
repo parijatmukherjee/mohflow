@@ -551,7 +551,7 @@ class FrameworkDetector:
             if hasattr(__main__, "__file__") and __main__.__file__:
                 # Simple heuristic: check for argparse usage
                 with open(__main__.__file__, "r") as f:
-                    content = f.read(4096)  # Read only the first 4 KB for efficiency
+                    content = f.read(4096)  # Read first 4 KB for efficiency
                     return "argparse" in content or "click" in content
         except Exception:
             pass

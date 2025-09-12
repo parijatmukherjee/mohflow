@@ -6,6 +6,7 @@ Information (PII) using both traditional regex patterns and ML-based
 classification techniques.
 """
 
+import math
 import re
 import hashlib
 from typing import Dict, List, Any, Optional, Tuple
@@ -198,8 +199,6 @@ class MLPIIDetector:
         for count in char_counts.values():
             probability = count / text_len
             if probability > 0:
-                import math
-
                 entropy -= probability * math.log2(probability)
 
         return entropy
