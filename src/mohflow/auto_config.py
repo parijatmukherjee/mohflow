@@ -864,8 +864,7 @@ def auto_configure(base_config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_intelligent_config(
-    base_config: Dict[str, Any],
-    service_name: Optional[str] = None
+    base_config: Dict[str, Any], service_name: Optional[str] = None
 ) -> Dict[str, Any]:
     """Convenience function to get intelligent configuration with
     framework detection"""

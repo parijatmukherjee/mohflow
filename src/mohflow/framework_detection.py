@@ -1,5 +1,6 @@
 """
-Advanced framework and application detection for intelligent auto-configuration.
+Advanced framework and application detection for intelligent
+auto-configuration.
 
 This module detects popular Python frameworks and adjusts logging
 configuration automatically for optimal integration and performance.

@@ -1,16 +1,16 @@
 """
 Advanced PII detection using machine learning patterns and heuristics.
 
-This module provides intelligent detection of Personally Identifiable Information (PII)
-using both traditional regex patterns and ML-based classification techniques.
+This module provides intelligent detection of Personally Identifiable
+Information (PII) using both traditional regex patterns and ML-based
+classification techniques.
 """
 
 import re
 import hashlib
-from typing import Dict, List, Set, Any, Optional, Tuple, Pattern
+from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
-import logging
 
 
 # PII Classification Levels
@@ -54,7 +54,8 @@ class MLPIIDetector:
 
         Args:
             enable_ml: Enable ML-based detection (vs regex-only)
-            aggressive_mode: More sensitive detection with higher false positives
+            aggressive_mode: More sensitive detection with higher false
+                positives
         """
         self.enable_ml = enable_ml
         self.aggressive_mode = aggressive_mode
@@ -69,7 +70,8 @@ class MLPIIDetector:
             "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b|\b\d{9}\b"),
             "credit_card": re.compile(r"\b(?:\d{4}[-\s]?){3}\d{4}\b"),
             "phone": re.compile(
-                r"\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b"
+                r"\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?"
+                r"[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b"
             ),
             "passport": re.compile(r"\b[A-Z]{1,2}[0-9]{6,9}\b"),
             "drivers_license": re.compile(r"\b[A-Z]{1,2}[0-9]{6,8}\b"),
@@ -82,7 +84,8 @@ class MLPIIDetector:
             ),
             "ip_address": re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
             "date_birth": re.compile(
-                r"\b(?:0[1-9]|1[0-2])[-/](?:0[1-9]|[12][0-9]|3[01])[-/](?:19|20)\d{2}\b"
+                r"\b(?:0[1-9]|1[0-2])[-/](?:0[1-9]|[12][0-9]|3[01])"
+                r"[-/](?:19|20)\d{2}\b"
             ),
             "bank_account": re.compile(r"\b[0-9]{8,17}\b"),
         }
@@ -91,7 +94,8 @@ class MLPIIDetector:
         self.medium_patterns = {
             "name": re.compile(r"\b[A-Z][a-z]+ [A-Z][a-z]+\b"),
             "address": re.compile(
-                r"\b\d+\s+[A-Za-z0-9\s,.-]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr)\b",
+                r"\b\d+\s+[A-Za-z0-9\s,.-]+(?:Street|St|Avenue|Ave|Road|Rd|"
+                r"Boulevard|Blvd|Lane|Ln|Drive|Dr)\b",
                 re.IGNORECASE,
             ),
             "zip_code": re.compile(r"\b\d{5}(?:-\d{4})?\b"),
@@ -105,7 +109,8 @@ class MLPIIDetector:
                 r"\b[A-Za-z0-9+/]{20,}={0,2}\b"
             ),  # Base64-like tokens
             "uuid": re.compile(
-                r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b",
+                r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-"
+                r"[0-9a-f]{4}-[0-9a-f]{12}\b",
                 re.IGNORECASE,
             ),
         }
@@ -420,7 +425,11 @@ class MLPIIDetector:
                 return "*" * text_len
             else:
                 visible_chars = min(text_len // 3, 3)
-                return f"{text[:visible_chars]}{'*' * (text_len - visible_chars * 2)}{text[-visible_chars:]}"
+                return (
+                    f"{text[:visible_chars]}"
+                    f"{'*' * (text_len - visible_chars * 2)}"
+                    f"{text[-visible_chars:]}"
+                )
 
         elif level == PIILevel.LOW:
             # Hash-based redaction for low-risk PII (preserves some utility)
@@ -564,7 +573,8 @@ class MLPIIDetector:
 
         if risk_score > 0.7:
             recommendations.append(
-                "HIGH RISK: Consider implementing field-level encryption for sensitive data"
+                "HIGH RISK: Consider implementing field-level encryption "
+                "for sensitive data"
             )
             recommendations.append(
                 "Enable aggressive PII filtering in production environments"
@@ -572,10 +582,12 @@ class MLPIIDetector:
 
         if risk_score > 0.4:
             recommendations.append(
-                "MEDIUM RISK: Implement data masking for non-production environments"
+                "MEDIUM RISK: Implement data masking for non-production "
+                "environments"
             )
             recommendations.append(
-                "Consider using structured logging to separate PII from operational data"
+                "Consider using structured logging to separate PII from "
+                "operational data"
             )
 
         if any(

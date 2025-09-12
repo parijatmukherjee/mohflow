@@ -134,7 +134,8 @@ class PrivacyAwareFilter:
                 formatted_msg = record.getMessage()
                 filtered_msg = self._filter_text(formatted_msg)
                 filtered_record.msg = filtered_msg
-                filtered_record.args = ()  # Clear args since we've formatted the message
+                # Clear args since we've formatted the message
+                filtered_record.args = ()
             except (TypeError, ValueError):
                 # Fallback: filter the message template and args separately
                 filtered_record.msg = self._filter_text(str(record.msg))
@@ -279,7 +280,8 @@ class PrivacyAwareFilter:
             ), has_pii
 
         elif isinstance(value, (int, float, bool)):
-            # Numeric values - check if they might be PII (like SSNs stored as numbers)
+            # Numeric values - check if they might be PII
+            # (like SSNs stored as numbers)
             result = self._detector.detect_pii(str(value), field_name)
             if result.level.value != "none" and self._should_redact_level(
                 result.level
@@ -298,7 +300,9 @@ class PrivacyAwareFilter:
             return value, False
 
     def _should_redact_level(self, pii_level: PIILevel) -> bool:
-        """Determine if a PII level should be redacted based on configuration."""
+        """
+        Determine if a PII level should be redacted based on configuration.
+        """
         level_hierarchy = {
             PIILevel.NONE: 0,
             PIILevel.LOW: 1,
@@ -416,12 +420,14 @@ class PrivacyAwareFilter:
 
         if risk_levels["critical"] > 0:
             recommendations.append(
-                "CRITICAL: Critical PII detected in logs - immediate action required"
+                "CRITICAL: Critical PII detected in logs - immediate action "
+                "required"
             )
 
         if risk_levels["high"] > 0:
             recommendations.append(
-                "HIGH RISK: High-risk PII detected - consider data minimization"
+                "HIGH RISK: High-risk PII detected - consider data "
+                "minimization"
             )
 
         if not recommendations:

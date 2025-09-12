@@ -296,9 +296,11 @@ def setup_multi_exporter(
                         )
 
                 elif exporter_type == "otlp":
-                    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
-                        OTLPSpanExporter,
+                    from opentelemetry.exporter.otlp.proto.grpc import (
+                        trace_exporter,
                     )
+
+                    OTLPSpanExporter = trace_exporter.OTLPSpanExporter
 
                     endpoint = exporter_config.get(
                         "endpoint", "http://localhost:4317"

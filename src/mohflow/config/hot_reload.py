@@ -351,7 +351,9 @@ class HotReloadManager:
         old_checksum = self.config_checksums.get(config_path)
         return new_checksum != old_checksum
 
-    def _load_and_validate_config(self, config_path: str) -> Optional[Dict[str, Any]]:
+    def _load_and_validate_config(
+        self, config_path: str
+    ) -> Optional[Dict[str, Any]]:
         """Load and validate new configuration."""
         file_path = Path(config_path)
         config_type = self.watched_files.get(file_path, "json")
@@ -367,13 +369,17 @@ class HotReloadManager:
     ) -> bool:
         """Apply configuration change and handle callbacks."""
         old_config = self._get_old_config()
-        change = self._create_change_record(config_path, old_config, new_config, source)
+        change = self._create_change_record(
+            config_path, old_config, new_config, source
+        )
 
         success = self._apply_config(new_config)
         change.applied = success
 
         if success:
-            self._handle_successful_config_change(config_path, source, new_config)
+            self._handle_successful_config_change(
+                config_path, source, new_config
+            )
         else:
             self._handle_failed_config_change(config_path, source, change)
 
@@ -450,7 +456,9 @@ class HotReloadManager:
             if len(self.change_history) > self.max_history:
                 self.change_history.pop(0)
 
-    def _log_config_error(self, config_path: str, source: str, error: Exception) -> None:
+    def _log_config_error(
+        self, config_path: str, source: str, error: Exception
+    ) -> None:
         """Log configuration error."""
         if hasattr(self.logger, "error"):
             self.logger.error(

@@ -189,7 +189,8 @@ class OrjsonFormatter(logging.Formatter):
 
 class FastJSONFormatter(OrjsonFormatter):
     """
-    Optimized JSON formatter with preset configurations for maximum performance.
+    Optimized JSON formatter with preset configurations for maximum
+    performance.
 
     Uses orjson with optimized settings:
     - Compact output (no indentation)

@@ -169,7 +169,8 @@ class AsyncNetworkHandler(AsyncSafeHandler):
 
 class BatchedAsyncHandler(AsyncSafeHandler):
     """
-    Batched async handler that accumulates records and processes them in batches.
+    Batched async handler that accumulates records and processes them in
+    batches.
 
     Optimized for high-throughput scenarios where batching improves
     performance.

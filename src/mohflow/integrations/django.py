@@ -342,11 +342,7 @@ def setup_command_logging(logger: Any, command_name: str):
     # Create command-specific context
     command_logger = type(logger)(
         service_name=logger.config.SERVICE_NAME,
-        **{
-            k: v
-            for k, v in logger.__dict__.items()
-            if not k.startswith("_")
-        },
+        **{k: v for k, v in logger.__dict__.items() if not k.startswith("_")},
     )
 
     # Set command context

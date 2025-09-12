@@ -1,10 +1,9 @@
 import logging
 import time
-from typing import Optional, Dict, Any, List, Union, TYPE_CHECKING
+from typing import Optional, Dict, Any, List, Union
 from pathlib import Path
 from mohflow.config import LogConfig
 from mohflow.formatters import (
-    OrjsonFormatter,
     FastJSONFormatter,
     StructuredFormatter,
 )
@@ -24,12 +23,7 @@ from mohflow.types import (
     LogLevel,
     FormatterType,
     ExporterType,
-    LogData,
     OptimizationReport,
-    FrameworkDetectionResult,
-    LogFormatter,
-    ContextEnricher as ContextEnricherProtocol,
-    DataFilter,
     LogFilePath,
 )
 
@@ -41,8 +35,6 @@ try:
         PrivacyConfig,
         ComplianceReporter,
         ComplianceStandard,
-        detect_pii,
-        generate_privacy_report,
     )
 
     HAS_PRIVACY = True
@@ -56,10 +48,6 @@ try:
     HAS_OTEL = True
 except ImportError:
     HAS_OTEL = False
-
-if TYPE_CHECKING:
-    from mohflow.context.enrichment import ContextEnricher
-    from mohflow.context.filters import SensitiveDataFilter
 
 
 class MohflowLogger(ContextualLogger):
@@ -749,7 +737,7 @@ class MohflowLogger(ContextualLogger):
         otlp_endpoint: Optional[str] = None,
         **overrides: Any,
     ) -> "MohflowLogger":
-        """Create microservice-optimized logger with tracing and production 
+        """Create microservice-optimized logger with tracing and production
         settings."""
         return cls(
             service_name=service_name,
@@ -783,7 +771,8 @@ class MohflowLogger(ContextualLogger):
     @classmethod
     def smart(cls, service_name: str, **overrides: Any) -> "MohflowLogger":
         """
-        Create smart logger with automatic framework detection and optimization.
+        Create smart logger with automatic framework detection and
+        optimization.
 
         This factory method automatically detects your application's frameworks
         and configures the logger for optimal performance and integration.

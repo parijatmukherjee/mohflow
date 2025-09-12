@@ -137,7 +137,10 @@ class ComplianceReporter:
                     ComplianceRule(
                         rule_id="HIPAA-001",
                         standard=ComplianceStandard.HIPAA,
-                        description="Protected Health Information (PHI) must not be logged",
+                        description=(
+                            "Protected Health Information (PHI) must not "
+                            "be logged"
+                        ),
                         severity="critical",
                         pii_types={
                             "medical_record",
@@ -151,7 +154,9 @@ class ComplianceReporter:
                     ComplianceRule(
                         rule_id="HIPAA-002",
                         standard=ComplianceStandard.HIPAA,
-                        description="Patient identifiers require de-identification",
+                        description=(
+                            "Patient identifiers require de-identification"
+                        ),
                         severity="high",
                         pii_types={"phone", "email", "address"},
                         max_acceptable_level=PIILevel.LOW,
@@ -171,16 +176,22 @@ class ComplianceReporter:
                         severity="critical",
                         pii_types={"credit_card"},
                         max_acceptable_level=PIILevel.NONE,
-                        remediation_action="Remove all credit card numbers from logs",
+                        remediation_action=(
+                            "Remove all credit card numbers from logs"
+                        ),
                     ),
                     ComplianceRule(
                         rule_id="PCI-002",
                         standard=ComplianceStandard.PCI_DSS,
-                        description="Sensitive authentication data must be protected",
+                        description=(
+                            "Sensitive authentication data must be protected"
+                        ),
                         severity="critical",
                         pii_types={"token", "username"},
                         max_acceptable_level=PIILevel.LOW,
-                        remediation_action="Protect sensitive authentication data",
+                        remediation_action=(
+                            "Protect sensitive authentication data"
+                        ),
                     ),
                 ]
             )
@@ -192,7 +203,9 @@ class ComplianceReporter:
                     ComplianceRule(
                         rule_id="CCPA-001",
                         standard=ComplianceStandard.CCPA,
-                        description="Personal information must be minimized in logs",
+                        description=(
+                            "Personal information must be minimized in logs"
+                        ),
                         severity="high",
                         pii_types={
                             "name",
@@ -202,7 +215,9 @@ class ComplianceReporter:
                             "ip_address",
                         },
                         max_acceptable_level=PIILevel.LOW,
-                        remediation_action="Minimize personal information in logs",
+                        remediation_action=(
+                            "Minimize personal information in logs"
+                        ),
                     )
                 ]
             )
@@ -251,7 +266,9 @@ class ComplianceReporter:
     def _violates_level_threshold(
         self, detected_level: PIILevel, max_acceptable: PIILevel
     ) -> bool:
-        """Check if detected PII level violates the maximum acceptable level."""
+        """
+        Check if detected PII level violates the maximum acceptable level.
+        """
         level_hierarchy = {
             PIILevel.NONE: 0,
             PIILevel.LOW: 1,
@@ -331,7 +348,6 @@ class ComplianceReporter:
         total_possible_violations = (
             len(self.compliance_rules) * 100
         )  # Theoretical max
-        actual_violations = len(relevant_violations)
 
         # Weight violations by severity
         weighted_violations = (
@@ -447,7 +463,9 @@ class ComplianceReporter:
                     "estimated_effort": self._estimate_remediation_effort(
                         action, len(action_violations)
                     ),
-                    "compliance_impact": f"Resolves {len(action_violations)} violation(s)",
+                    "compliance_impact": (
+                        f"Resolves {len(action_violations)} violation(s)"
+                    ),
                 }
             )
 
@@ -560,66 +578,57 @@ class ComplianceReporter:
 
     def _export_html_report(self, report: Dict[str, Any]) -> str:
         """Export report as HTML format."""
-        html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Compliance Report</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                .header {{ background-color: #f0f0f0; padding: 10px; border-radius: 5px; }}
-                .status-compliant {{ color: green; font-weight: bold; }}
-                .status-non-compliant {{ color: red; font-weight: bold; }}
-                table {{ border-collapse: collapse; width: 100%; margin-top: 20px; }}
-                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-                th {{ background-color: #f2f2f2; }}
-                .critical {{ background-color: #ffebee; }}
-                .high {{ background-color: #fff3e0; }}
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>Compliance Report</h1>
-                <p><strong>Generated:</strong> {report['report_metadata']['generated_at']}</p>
-                <p><strong>Status:</strong> <span class="status-{report['compliance_summary']['overall_status'].lower().replace('_', '-')}">{report['compliance_summary']['overall_status']}</span></p>
-                <p><strong>Score:</strong> {report['compliance_summary']['compliance_score']}/100</p>
-            </div>
-            
-            <h2>Violations by Severity</h2>
-            <table>
-                <tr><th>Severity</th><th>Count</th></tr>
-        """
+        # Build HTML in parts to avoid long lines
+        html = "<!DOCTYPE html><html><head><title>Compliance Report</title>"
+        html += "<style>"
+        html += "body { font-family: Arial, sans-serif; margin: 20px; }"
+        html += ".header { background-color: #f0f0f0; padding: 10px; "
+        html += "border-radius: 5px; }"
+        html += ".status-compliant { color: green; font-weight: bold; }"
+        html += ".status-non-compliant { color: red; font-weight: bold; }"
+        html += "table { border-collapse: collapse; width: 100%; "
+        html += "margin-top: 20px; }"
+        html += "th, td { border: 1px solid #ddd; padding: 8px; "
+        html += "text-align: left; }"
+        html += "th { background-color: #f2f2f2; }"
+        html += ".critical { background-color: #ffebee; }"
+        html += ".high { background-color: #fff3e0; }"
+        html += "</style></head><body>"
+        html += '<div class="header"><h1>Compliance Report</h1>'
+        html += "<p><strong>Generated:</strong> "
+        html += f"{report['report_metadata']['generated_at']}</p>"
+
+        status = report["compliance_summary"]["overall_status"]
+        html += '<p><strong>Status:</strong> <span class="status-'
+        html += f'{status.lower().replace("_", "-")}">{status}</span></p>'
+        html += "<p><strong>Score:</strong> "
+        html += f"{report['compliance_summary']['compliance_score']}/100</p>"
+        html += "</div><h2>Violations by Severity</h2><table>"
+        html += "<tr><th>Severity</th><th>Count</th></tr>"
 
         for severity, count in report["compliance_summary"][
             "violations_by_severity"
         ].items():
-            html += f"<tr class='{severity}'><td>{severity.title()}</td><td>{count}</td></tr>"
+            html += (
+                f"<tr class='{severity}'><td>{severity.title()}</td>"
+                f"<td>{count}</td></tr>"
+            )
 
-        html += """
-            </table>
-            
-            <h2>Recent Violations</h2>
-            <table>
-                <tr><th>Rule</th><th>Standard</th><th>Severity</th><th>Field</th><th>PII Types</th><th>Time</th></tr>
-        """
+        html += "</table><h2>Recent Violations</h2><table>"
+        html += "<tr><th>Rule</th><th>Standard</th><th>Severity</th>"
+        html += "<th>Field</th><th>PII Types</th><th>Time</th></tr>"
 
         for violation in report["detailed_violations"][:20]:  # Show last 20
-            html += f"""
-                <tr class='{violation["severity"]}'>
-                    <td>{violation['rule_id']}</td>
-                    <td>{violation['standard']}</td>
-                    <td>{violation['severity'].title()}</td>
-                    <td>{violation['field_path']}</td>
-                    <td>{', '.join(violation['pii_types'])}</td>
-                    <td>{violation['timestamp'][:19]}</td>
-                </tr>
-            """
+            html += f"<tr class='{violation['severity']}'>"
+            html += f"<td>{violation['rule_id']}</td>"
+            html += f"<td>{violation['standard']}</td>"
+            html += f"<td>{violation['severity'].title()}</td>"
+            html += f"<td>{violation['field_path']}</td>"
+            html += f"<td>{', '.join(violation['pii_types'])}</td>"
+            html += f"<td>{violation['timestamp'][:19]}</td>"
+            html += "</tr>"
 
-        html += """
-            </table>
-        </body>
-        </html>
-        """
+        html += "</table></body></html>"
 
         return html
 

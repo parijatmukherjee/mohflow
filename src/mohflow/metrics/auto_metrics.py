@@ -474,7 +474,7 @@ class AutoMetricsGenerator:
                     summary["gauges"][metric_name] = gauge_data
 
             # Rates (per second calculations)
-            # current_time = time.time()
+            current_time = time.time()
             for metric_name, timestamps in self._rate_windows.items():
                 if not timestamps:
                     continue
@@ -549,7 +549,7 @@ class AutoMetricsGenerator:
                     lines.append(
                         (
                             f'{metric_name}{{quantile="{quantile}"}} '
-                            f'{value} {current_time}'
+                            f"{value} {current_time}"
                         )
                     )
 
