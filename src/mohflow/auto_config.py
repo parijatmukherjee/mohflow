@@ -742,7 +742,8 @@ class AutoConfigurator:
         return None
 
     def get_environment_summary(self) -> Dict[str, Any]:
-        """Get a comprehensive summary of the detected environment and frameworks"""
+        """Get a comprehensive summary of the detected environment and
+        frameworks"""
         env_info = self.detect_environment()
         app_info = self._framework_detector.detect_application_type()
 
@@ -828,11 +829,13 @@ class AutoConfigurator:
                                 merged_config[key][sub_key] = {}
                             merged_config[key][sub_key].update(sub_value)
                         else:
-                            # Framework setting takes precedence for non-custom fields
+                            # Framework setting takes precedence for
+                            # non-custom fields
                             merged_config[key][sub_key] = sub_value
 
                 elif key in ["formatter_type", "async_handlers"]:
-                    # Framework preferences for performance settings take precedence
+                    # Framework preferences for performance settings
+                    # take precedence
                     merged_config[key] = value
 
                 else:
@@ -861,17 +864,20 @@ def auto_configure(base_config: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def get_intelligent_config(
-    base_config: Dict[str, Any], service_name: Optional[str] = None
+    base_config: Dict[str, Any],
+    service_name: Optional[str] = None
 ) -> Dict[str, Any]:
-    """Convenience function to get intelligent configuration with framework detection"""
+    """Convenience function to get intelligent configuration with
+    framework detection"""
     return _auto_configurator.get_intelligent_config(base_config, service_name)
 
 
 def get_framework_recommendations() -> Dict[str, Any]:
-    """Convenience function to get framework-specific recommendations"""
+    """Convenience function to get framework-specific
+    recommendations"""
     return _auto_configurator.get_framework_recommendations()
 
 
 def get_environment_summary() -> Dict[str, Any]:
-    """Convenience function to get comprehensive environment and framework summary"""
+    """Get comprehensive environment and framework summary."""
     return _auto_configurator.get_environment_summary()

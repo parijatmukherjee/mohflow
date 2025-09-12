@@ -1,6 +1,5 @@
 """Async-safe handlers for high-performance logging in async applications."""
 
-import asyncio
 import logging
 import queue
 import threading
@@ -172,7 +171,8 @@ class BatchedAsyncHandler(AsyncSafeHandler):
     """
     Batched async handler that accumulates records and processes them in batches.
 
-    Optimized for high-throughput scenarios where batching improves performance.
+    Optimized for high-throughput scenarios where batching improves
+    performance.
     """
 
     def __init__(

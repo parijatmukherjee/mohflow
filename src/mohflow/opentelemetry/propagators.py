@@ -5,11 +5,11 @@ This module provides utilities for extracting and injecting trace context
 across service boundaries, enabling distributed tracing correlation.
 """
 
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional
 import logging
 
 try:
-    from opentelemetry import trace, propagate, context
+    from opentelemetry import propagate, context
     from opentelemetry.propagators.b3 import B3MultiFormat, B3SingleFormat
     from opentelemetry.propagators.jaeger import JaegerPropagator
     from opentelemetry.trace.propagation.tracecontext import (
@@ -29,7 +29,8 @@ def setup_trace_propagation(propagator_types: Optional[list] = None) -> bool:
 
     Args:
         propagator_types: List of propagator types to use.
-                         Supported: ["tracecontext", "b3", "b3single", "jaeger", "baggage"]
+                         Supported: ["tracecontext", "b3", "b3single",
+                         "jaeger", "baggage"]
                          Default: ["tracecontext", "baggage"]
 
     Returns:

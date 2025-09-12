@@ -8,17 +8,16 @@ offering automatic request/response logging and performance monitoring.
 import time
 import uuid
 import asyncio
-import json
-from typing import Optional, Dict, Any, Callable, List, Set, Union, Awaitable
+from typing import Optional, Dict, Any, Callable, List, Set
 from datetime import datetime
-from urllib.parse import parse_qs
 
 
 class MohFlowASGIMiddleware:
     """
     ASGI middleware for MohFlow logging.
 
-    Compatible with FastAPI, Starlette, Django Channels, Quart, and other ASGI frameworks.
+    Compatible with FastAPI, Starlette, Django Channels, Quart,
+    and other ASGI frameworks.
     """
 
     def __init__(
@@ -140,7 +139,10 @@ class MohFlowASGIMiddleware:
                         request_id=request_id, **request_context
                     ):
                         log_method(
-                            f"{method} {path} - {status_code} ({duration_ms:.1f}ms)",
+                            (
+                                f"{method} {path} - {status_code} "
+                                f"({duration_ms:.1f}ms)"
+                            ),
                             **{**request_context, **response_context},
                         )
 
@@ -152,7 +154,10 @@ class MohFlowASGIMiddleware:
                 request_id=request_id, **request_context
             ):
                 self.logger.error(
-                    f"{method} {path} - Unhandled exception ({duration_ms:.1f}ms)",
+                    (
+                        f"{method} {path} - Unhandled exception "
+                        f"({duration_ms:.1f}ms)"
+                    ),
                     error=str(e),
                     error_type=type(e).__name__,
                     duration=duration_ms,
@@ -368,7 +373,10 @@ class MohFlowWSGIMiddleware:
                         request_id=request_id, **request_context
                     ):
                         log_method(
-                            f"{method} {path} - {status_code} ({duration_ms:.1f}ms)",
+                            (
+                                f"{method} {path} - {status_code} "
+                                f"({duration_ms:.1f}ms)"
+                            ),
                             **{**request_context, **response_context},
                         )
 
@@ -382,7 +390,10 @@ class MohFlowWSGIMiddleware:
                 request_id=request_id, **request_context
             ):
                 self.logger.error(
-                    f"{method} {path} - Unhandled exception ({duration_ms:.1f}ms)",
+                    (
+                        f"{method} {path} - Unhandled exception "
+                        f"({duration_ms:.1f}ms)"
+                    ),
                     error=str(e),
                     error_type=type(e).__name__,
                     duration=duration_ms,
@@ -512,7 +523,10 @@ def auto_setup_middleware(app, logger: Any, **config):
     elif "django" in module_name:
         # Django should use the Django-specific middleware
         raise ValueError(
-            "For Django apps, use mohflow.integrations.django.MohFlowDjangoMiddleware"
+            (
+                "For Django apps, use "
+                "mohflow.integrations.django.MohFlowDjangoMiddleware"
+            )
         )
 
     # Generic WSGI app

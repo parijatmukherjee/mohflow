@@ -1,7 +1,8 @@
 """
 MohFlow Log Sampling and Rate Limiting
 
-This package provides intelligent log sampling capabilities for high-volume services:
+This package provides intelligent log sampling capabilities for
+high-volume services:
 
 - Adaptive sampling that adjusts based on load
 - Rate limiting with burst support

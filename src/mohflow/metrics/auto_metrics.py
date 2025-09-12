@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from collections import defaultdict, deque
 from enum import Enum
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class MetricType(Enum):
@@ -241,7 +241,8 @@ class AutoMetricsGenerator:
         Process a log record and extract metrics.
 
         Args:
-            log_record: Log record dictionary containing message, level, context, etc.
+            log_record: Log record dictionary containing message, level,
+            context, etc.
 
         Returns:
             List of MetricValue objects extracted from the log
@@ -253,7 +254,7 @@ class AutoMetricsGenerator:
                 try:
                     metric_values = self._extract_metric(extractor, log_record)
                     metrics.extend(metric_values)
-                except Exception as e:
+                except Exception:
                     # Don't let metric extraction errors break logging
                     continue
 
@@ -473,7 +474,7 @@ class AutoMetricsGenerator:
                     summary["gauges"][metric_name] = gauge_data
 
             # Rates (per second calculations)
-            current_time = time.time()
+            # current_time = time.time()
             for metric_name, timestamps in self._rate_windows.items():
                 if not timestamps:
                     continue
@@ -546,7 +547,10 @@ class AutoMetricsGenerator:
                 for quantile in [0.5, 0.9, 0.95, 0.99]:
                     value = self._percentile(numeric_values, quantile * 100)
                     lines.append(
-                        f'{metric_name}{{quantile="{quantile}"}} {value} {current_time}'
+                        (
+                            f'{metric_name}{{quantile="{quantile}"}} '
+                            f'{value} {current_time}'
+                        )
                     )
 
             # Export gauges
@@ -565,7 +569,10 @@ class AutoMetricsGenerator:
                         )
                         labels_part = f"{{{labels_str}}}" if labels_str else ""
                         lines.append(
-                            f"{metric_name}{labels_part} {stats.last_value} {current_time}"
+                            (
+                                f"{metric_name}{labels_part} "
+                                f"{stats.last_value} {current_time}"
+                            )
                         )
 
         return "\n".join(lines)
@@ -582,8 +589,8 @@ class AutoMetricsGenerator:
         self, time_window_seconds: int = 300
     ) -> Dict[str, float]:
         """Calculate error rates over specified time window."""
-        current_time = time.time()
-        cutoff_time = current_time - time_window_seconds
+        # current_time = time.time()
+        # cutoff_time = current_time - time_window_seconds
 
         error_rates = {}
 

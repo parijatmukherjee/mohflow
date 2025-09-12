@@ -5,13 +5,13 @@ This module provides convenient setup functions for popular tracing backends
 like Jaeger, OTLP, and console output.
 """
 
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional
 import os
 
 try:
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
     from opentelemetry.sdk.resources import (
         Resource,
         SERVICE_NAME,

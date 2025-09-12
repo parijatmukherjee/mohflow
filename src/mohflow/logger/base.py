@@ -13,7 +13,7 @@ from mohflow.handlers.loki import LokiHandler
 from mohflow.context.enrichment import ContextEnricher, set_global_context
 from mohflow.context.filters import SensitiveDataFilter
 from mohflow.context.scoped_context import ContextualLogger
-from mohflow.auto_config import auto_configure, get_intelligent_config
+from mohflow.auto_config import get_intelligent_config
 from mohflow.sampling import AdaptiveSampler, SamplingConfig, SamplingStrategy
 from mohflow.metrics import (
     AutoMetricsGenerator,
@@ -100,7 +100,8 @@ class MohflowLogger(ContextualLogger):
         level_sample_rates: Optional[Dict[str, float]] = None,
         # Auto-metrics parameters
         enable_auto_metrics: bool = False,
-        metrics_config: str = "default",  # "default", "web_service", "database", "custom"
+        metrics_config: str = "default",  # "default", "web_service",
+        # "database", "custom"
         export_prometheus: bool = False,
         **kwargs: Any,
     ) -> None:
@@ -543,7 +544,7 @@ class MohflowLogger(ContextualLogger):
                     f"Extracted metrics: {metric_names}",
                     extracted_metrics=metric_names,
                 )
-        except Exception as e:
+        except Exception:
             # Don't let metrics processing break logging
             pass
 
@@ -748,7 +749,8 @@ class MohflowLogger(ContextualLogger):
         otlp_endpoint: Optional[str] = None,
         **overrides: Any,
     ) -> "MohflowLogger":
-        """Create microservice-optimized logger with tracing and production settings."""
+        """Create microservice-optimized logger with tracing and production 
+        settings."""
         return cls(
             service_name=service_name,
             formatter_type="production",
@@ -797,7 +799,8 @@ class MohflowLogger(ContextualLogger):
         cls, service_name: str, enable_tracing: bool = True, **overrides: Any
     ) -> "MohflowLogger":
         """
-        Create automatically optimized logger based on detected environment and frameworks.
+        Create automatically optimized logger based on detected environment
+        and frameworks.
 
         This is the most intelligent factory method that:
         - Detects your frameworks (Flask, FastAPI, Django, etc.)
@@ -906,13 +909,17 @@ class MohflowLogger(ContextualLogger):
     def _generate_optimization_tips(
         self, framework_info: Dict[str, Any]
     ) -> List[str]:
-        """Generate optimization tips based on current config and detected frameworks."""
+        """Generate optimization tips based on current config and
+        detected frameworks."""
         tips = []
 
         # Framework-specific tips
         if framework_info.get("uses_async", False) and not self.async_handlers:
             tips.append(
-                "Consider enabling async_handlers=True for better async performance"
+                (
+                    "Consider enabling async_handlers=True for better "
+                    "async performance"
+                )
             )
 
         if (
@@ -920,12 +927,18 @@ class MohflowLogger(ContextualLogger):
             and self.formatter_type != "fast"
         ):
             tips.append(
-                "Consider using formatter_type='fast' for high-throughput API services"
+                (
+                    "Consider using formatter_type='fast' for "
+                    "high-throughput API services"
+                )
             )
 
         if framework_info.get("app_type") == "web" and not self.enable_otel:
             tips.append(
-                "Consider enabling tracing for better request correlation in web apps"
+                (
+                    "Consider enabling tracing for better request "
+                    "correlation in web apps"
+                )
             )
 
         # Environment-specific tips

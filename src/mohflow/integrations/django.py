@@ -7,8 +7,7 @@ Django integration with automatic request/response logging.
 
 import time
 import uuid
-import json
-from typing import Optional, Dict, Any, Callable, List, Set
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 try:
@@ -148,7 +147,8 @@ class MohFlowDjangoMiddleware(MiddlewareMixin):
                 **request.mohflow_context,
             ):
                 log_method(
-                    f"{request.method} {request.path} - {response.status_code} "
+                    f"{request.method} {request.path} - "
+                    f"{response.status_code} "
                     f"({duration_ms:.1f}ms)",
                     **{**request.mohflow_context, **response_context},
                 )
@@ -345,7 +345,7 @@ def setup_command_logging(logger: Any, command_name: str):
         **{
             k: v
             for k, v in logger.__dict__.items()
-            if k.startswith("_") == False
+            if not k.startswith("_")
         },
     )
 

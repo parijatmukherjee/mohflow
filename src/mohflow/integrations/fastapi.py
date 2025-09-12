@@ -1,15 +1,14 @@
 """
 FastAPI integration for MohFlow logging.
 
-Provides automatic request/response logging, error tracking, and performance monitoring
-for FastAPI applications with minimal configuration.
+Provides automatic request/response logging, error tracking, and performance
+monitoring for FastAPI applications with minimal configuration.
 """
 
 import time
 import uuid
 from typing import Optional, Dict, Any, Callable, List, Set
 from datetime import datetime
-import json
 
 try:
     from fastapi import Request, Response, FastAPI
@@ -151,7 +150,8 @@ class MohFlowFastAPIMiddleware(BaseHTTPMiddleware):
                     request_id=request_id, **request_context
                 ):
                     log_method(
-                        f"{request.method} {request.url.path} - {response.status_code} "
+                        f"{request.method} {request.url.path} - "
+                        f"{response.status_code} "
                         f"({duration_ms:.1f}ms)",
                         **{**request_context, **response_context},
                     )
@@ -166,7 +166,8 @@ class MohFlowFastAPIMiddleware(BaseHTTPMiddleware):
                 request_id=request_id, **request_context
             ):
                 self.logger.error(
-                    f"{request.method} {request.url.path} - Unhandled exception "
+                    f"{request.method} {request.url.path} - "
+                    f"Unhandled exception "
                     f"({duration_ms:.1f}ms)",
                     error=str(e),
                     error_type=type(e).__name__,

@@ -8,13 +8,12 @@ with automatic request/response logging and error handling.
 import time
 import uuid
 import functools
-from typing import Optional, Dict, Any, Callable, List
+from typing import Optional, Dict, Any
 from datetime import datetime
 from werkzeug.exceptions import HTTPException
 
 try:
     from flask import Flask, request, g, jsonify, current_app
-    from flask.ctx import RequestContext
 
     HAS_FLASK = True
 except ImportError:
@@ -156,7 +155,8 @@ class MohFlowFlaskExtension:
                 request_id=g.mohflow_request_id, **g.mohflow_context
             ):
                 log_method(
-                    f"{request.method} {request.path} - {response.status_code} "
+                    f"{request.method} {request.path} - "
+                    f"{response.status_code} "
                     f"({duration_ms:.1f}ms)",
                     **{**g.mohflow_context, **response_context},
                 )

@@ -1,7 +1,6 @@
-"""High-performance JSON formatter using orjson for 4-10x faster serialization."""
+"""High-performance JSON formatter using orjson for faster serialization."""
 
 import logging
-import time
 from typing import Dict, Any, Optional, Union
 from datetime import datetime, timezone
 

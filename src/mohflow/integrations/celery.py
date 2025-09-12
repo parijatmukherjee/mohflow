@@ -7,7 +7,7 @@ for Celery distributed tasks with context propagation.
 
 import time
 import uuid
-from typing import Optional, Dict, Any, Callable
+from typing import Optional, Any
 from datetime import datetime
 import json
 
@@ -145,8 +145,8 @@ class MohFlowCeleryIntegration:
                 )
             else:
                 self.logger.warning(
-                    f"Task {task_context['task_name']} completed with state {state} "
-                    f"({duration_ms:.1f}ms)",
+                    f"Task {task_context['task_name']} completed with "
+                    f"state {state} ({duration_ms:.1f}ms)",
                     **task_context,
                 )
 
@@ -435,7 +435,9 @@ def log_task_progress(
         def long_task(self):
             for i in range(100):
                 # Do work
-                log_task_progress(logger, self.request.id, i+1, 100, "Processing item")
+                log_task_progress(
+                    logger, self.request.id, i+1, 100, "Processing item"
+                )
     """
     progress_percent = (current / total * 100) if total > 0 else 0
 

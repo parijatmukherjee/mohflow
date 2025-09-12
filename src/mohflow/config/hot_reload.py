@@ -318,105 +318,148 @@ class HotReloadManager:
     def _handle_config_change(self, config_path: str, source: str) -> bool:
         """Handle configuration file changes."""
         try:
-            file_path = Path(config_path)
-
-            # Check if file still exists
-            if not file_path.exists():
-                if hasattr(self.logger, "warning"):
-                    self.logger.warning(
-                        "Config file no longer exists", config_path=config_path
-                    )
+            if not self._validate_file_exists(config_path):
                 return False
 
-            # Check if file actually changed
-            new_checksum = self._calculate_file_checksum(config_path)
-            old_checksum = self.config_checksums.get(config_path)
+            if not self._check_file_changed(config_path):
+                return True
 
-            if new_checksum == old_checksum:
-                return True  # No actual change
-
-            # Load and parse new configuration
-            config_type = self.watched_files.get(file_path, "json")
-            new_config = self._load_config_file(config_path, config_type)
-
+            new_config = self._load_and_validate_config(config_path)
             if new_config is None:
                 return False
 
-            # Get old config for change tracking
-            old_config = getattr(self.logger, "config", {})
-            if hasattr(old_config, "__dict__"):
-                old_config = old_config.__dict__
-
-            # Validate new configuration
-            if not self._validate_config(new_config):
-                return False
-
-            # Create change record
-            change = ConfigChange(
-                timestamp=datetime.utcnow(),
-                config_path=config_path,
-                old_config=(
-                    dict(old_config) if isinstance(old_config, dict) else {}
-                ),
-                new_config=new_config,
-                change_type=source,
-            )
-
-            # Apply configuration
-            success = self._apply_config(new_config)
-            change.applied = success
-
-            if success:
-                # Update checksum
-                self.config_checksums[config_path] = new_checksum
-
-                # Call reload callbacks
-                for callback in self.reload_callbacks:
-                    try:
-                        callback(new_config)
-                    except Exception as e:
-                        if hasattr(self.logger, "warning"):
-                            self.logger.warning(
-                                "Reload callback failed",
-                                callback=callback.__name__,
-                                error=str(e),
-                            )
-
-                if hasattr(self.logger, "info"):
-                    self.logger.info(
-                        "Configuration reloaded successfully",
-                        config_path=config_path,
-                        source=source,
-                        changes_applied=True,
-                    )
-            else:
-                change.error = "Failed to apply configuration"
-
-                if hasattr(self.logger, "error"):
-                    self.logger.error(
-                        "Failed to apply new configuration",
-                        config_path=config_path,
-                        source=source,
-                    )
-
-            # Add to history
-            with self.lock:
-                self.change_history.append(change)
-                if len(self.change_history) > self.max_history:
-                    self.change_history.pop(0)
-
-            return success
+            return self._apply_config_change(config_path, source, new_config)
 
         except Exception as e:
-            if hasattr(self.logger, "error"):
-                self.logger.error(
-                    "Error handling config change",
-                    config_path=config_path,
-                    source=source,
-                    error=str(e),
-                    error_type=type(e).__name__,
+            self._log_config_error(config_path, source, e)
+            return False
+
+    def _validate_file_exists(self, config_path: str) -> bool:
+        """Check if config file still exists."""
+        file_path = Path(config_path)
+        if not file_path.exists():
+            if hasattr(self.logger, "warning"):
+                self.logger.warning(
+                    "Config file no longer exists", config_path=config_path
                 )
             return False
+        return True
+
+    def _check_file_changed(self, config_path: str) -> bool:
+        """Check if file actually changed using checksum."""
+        new_checksum = self._calculate_file_checksum(config_path)
+        old_checksum = self.config_checksums.get(config_path)
+        return new_checksum != old_checksum
+
+    def _load_and_validate_config(self, config_path: str) -> Optional[Dict[str, Any]]:
+        """Load and validate new configuration."""
+        file_path = Path(config_path)
+        config_type = self.watched_files.get(file_path, "json")
+        new_config = self._load_config_file(config_path, config_type)
+
+        if new_config is None or not self._validate_config(new_config):
+            return None
+
+        return new_config
+
+    def _apply_config_change(
+        self, config_path: str, source: str, new_config: Dict[str, Any]
+    ) -> bool:
+        """Apply configuration change and handle callbacks."""
+        old_config = self._get_old_config()
+        change = self._create_change_record(config_path, old_config, new_config, source)
+
+        success = self._apply_config(new_config)
+        change.applied = success
+
+        if success:
+            self._handle_successful_config_change(config_path, source, new_config)
+        else:
+            self._handle_failed_config_change(config_path, source, change)
+
+        self._add_to_history(change)
+        return success
+
+    def _get_old_config(self) -> Dict[str, Any]:
+        """Get old configuration for change tracking."""
+        old_config = getattr(self.logger, "config", {})
+        if hasattr(old_config, "__dict__"):
+            old_config = old_config.__dict__
+        return dict(old_config) if isinstance(old_config, dict) else {}
+
+    def _create_change_record(
+        self,
+        config_path: str,
+        old_config: Dict[str, Any],
+        new_config: Dict[str, Any],
+        source: str,
+    ) -> ConfigChange:
+        """Create configuration change record."""
+        return ConfigChange(
+            timestamp=datetime.utcnow(),
+            config_path=config_path,
+            old_config=old_config,
+            new_config=new_config,
+            change_type=source,
+        )
+
+    def _handle_successful_config_change(
+        self, config_path: str, source: str, new_config: Dict[str, Any]
+    ) -> None:
+        """Handle successful configuration change."""
+        new_checksum = self._calculate_file_checksum(config_path)
+        self.config_checksums[config_path] = new_checksum
+
+        # Call reload callbacks
+        for callback in self.reload_callbacks:
+            try:
+                callback(new_config)
+            except Exception as e:
+                if hasattr(self.logger, "warning"):
+                    self.logger.warning(
+                        "Reload callback failed",
+                        callback=callback.__name__,
+                        error=str(e),
+                    )
+
+        if hasattr(self.logger, "info"):
+            self.logger.info(
+                "Configuration reloaded successfully",
+                config_path=config_path,
+                source=source,
+                changes_applied=True,
+            )
+
+    def _handle_failed_config_change(
+        self, config_path: str, source: str, change: ConfigChange
+    ) -> None:
+        """Handle failed configuration change."""
+        change.error = "Failed to apply configuration"
+
+        if hasattr(self.logger, "error"):
+            self.logger.error(
+                "Failed to apply new configuration",
+                config_path=config_path,
+                source=source,
+            )
+
+    def _add_to_history(self, change: ConfigChange) -> None:
+        """Add change to history."""
+        with self.lock:
+            self.change_history.append(change)
+            if len(self.change_history) > self.max_history:
+                self.change_history.pop(0)
+
+    def _log_config_error(self, config_path: str, source: str, error: Exception) -> None:
+        """Log configuration error."""
+        if hasattr(self.logger, "error"):
+            self.logger.error(
+                "Error handling config change",
+                config_path=config_path,
+                source=source,
+                error=str(error),
+                error_type=type(error).__name__,
+            )
 
     def _load_config_file(
         self, config_path: str, config_type: str

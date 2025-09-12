@@ -33,7 +33,7 @@ Example usage:
 
     # Get metrics summary
     summary = metrics_gen.get_metrics_summary()
-    print(f"Request latency p95: {summary['histograms']['request_duration_seconds']['p95']}")
+    print(\n        f"Request latency p95: "\n        f"{summary['histograms']['request_duration_seconds']['p95']}"\n    )
 
     # Export to Prometheus
     prometheus_metrics = metrics_gen.export_prometheus_metrics()

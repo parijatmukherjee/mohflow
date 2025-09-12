@@ -1,18 +1,19 @@
 """
-OpenTelemetry trace integration for automatic correlation of logs with distributed traces.
+OpenTelemetry trace integration for automatic correlation of logs with
+distributed traces.
 
-This module provides seamless integration between MohFlow logging and OpenTelemetry
-distributed tracing, enabling automatic correlation of log entries with trace spans.
+This module provides seamless integration between MohFlow logging and
+OpenTelemetry distributed tracing, enabling automatic correlation of log
+entries with trace spans.
 """
 
 import logging
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 from contextlib import contextmanager
 
 try:
-    from opentelemetry import trace, baggage
-    from opentelemetry.trace import SpanContext, TraceFlags
+    from opentelemetry import trace
     from opentelemetry.baggage import get_all as get_all_baggage
     from opentelemetry.sdk.trace import TracerProvider, Resource
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -114,10 +115,11 @@ class TraceContext:
 
 class OpenTelemetryEnricher:
     """
-    Log enricher that automatically adds OpenTelemetry trace context to log records.
+    Log enricher that automatically adds OpenTelemetry trace context to log
+    records.
 
-    This enricher extracts trace information from the current OpenTelemetry context
-    and adds it to log records for distributed tracing correlation.
+    This enricher extracts trace information from the current OpenTelemetry
+    context and adds it to log records for distributed tracing correlation.
     """
 
     def __init__(

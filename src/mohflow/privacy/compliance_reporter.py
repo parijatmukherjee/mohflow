@@ -1,7 +1,8 @@
 """
 Compliance reporting for privacy and data protection regulations.
 
-Provides automated compliance reporting for GDPR, HIPAA, PCI-DSS, and other standards.
+Provides automated compliance reporting for GDPR, HIPAA, PCI-DSS,
+and other standards.
 """
 
 from typing import Dict, List, Any, Optional, Set
@@ -11,7 +12,6 @@ from datetime import datetime, timedelta
 import json
 
 from .pii_detector import PIILevel, PIIDetectionResult
-from .privacy_filter import PrivacyAwareFilter, PrivacyConfig
 
 
 class ComplianceStandard(Enum):
@@ -93,25 +93,35 @@ class ComplianceReporter:
                     ComplianceRule(
                         rule_id="GDPR-001",
                         standard=ComplianceStandard.GDPR,
-                        description="Personal identifiers must not appear in logs",
+                        description=(
+                            "Personal identifiers must not appear in logs"
+                        ),
                         severity="critical",
                         pii_types={"name", "email", "phone", "address"},
                         max_acceptable_level=PIILevel.NONE,
-                        remediation_action="Remove or pseudonymize personal identifiers",
+                        remediation_action=(
+                            "Remove or pseudonymize personal identifiers"
+                        ),
                     ),
                     ComplianceRule(
                         rule_id="GDPR-002",
                         standard=ComplianceStandard.GDPR,
-                        description="High-risk personal data requires encryption",
+                        description=(
+                            "High-risk personal data requires encryption"
+                        ),
                         severity="high",
                         pii_types={"ssn", "passport", "date_birth"},
                         max_acceptable_level=PIILevel.LOW,
-                        remediation_action="Encrypt or hash high-risk personal data",
+                        remediation_action=(
+                            "Encrypt or hash high-risk personal data"
+                        ),
                     ),
                     ComplianceRule(
                         rule_id="GDPR-003",
                         standard=ComplianceStandard.GDPR,
-                        description="IP addresses are personal data under GDPR",
+                        description=(
+                            "IP addresses are personal data under GDPR"
+                        ),
                         severity="medium",
                         pii_types={"ip_address"},
                         max_acceptable_level=PIILevel.LOW,

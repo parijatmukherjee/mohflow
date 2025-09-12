@@ -32,7 +32,8 @@ class StructuredFormatter(OrjsonFormatter):
             include_context: Include request/correlation context
             include_system_info: Include system metadata
             include_source_info: Include source code information
-            field_processors: Custom field processors {field_name: processor_func}
+            field_processors: Custom field processors
+                {field_name: processor_func}
             context_fields: List of context fields to include
             **kwargs: Additional OrjsonFormatter arguments
         """
@@ -191,7 +192,7 @@ class ProductionFormatter(StructuredFormatter):
 
 
 class DevelopmentFormatter(StructuredFormatter):
-    """Development-optimized formatter with full context and readable output."""
+    """Development-optimized formatter with full context and output."""
 
     def __init__(self, **kwargs):
         # Development optimizations

@@ -77,7 +77,9 @@ class ScopedContextManager:
         Context manager for request-scoped logging context.
 
         Usage:
-            with logger_context.request_context(request_id="123", user_id="user456"):
+            with logger_context.request_context(
+                request_id="123", user_id="user456"
+            ):
                 logger.info("Processing request")  # Includes request context
 
         Args:
@@ -248,7 +250,9 @@ class ContextualLogger:
         Create a temporary context overlay for the next log message.
 
         Usage:
-            logger.with_context(component="auth", user_id="123").info("Login attempt")
+            logger.with_context(
+                component="auth", user_id="123"
+            ).info("Login attempt")
 
         Args:
             **kwargs: Context key-value pairs to add temporarily

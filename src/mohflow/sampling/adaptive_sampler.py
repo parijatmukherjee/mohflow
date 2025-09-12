@@ -13,11 +13,10 @@ import time
 import threading
 import random
 import hashlib
-from typing import Dict, Optional, Tuple, Any, List, Union
+from typing import Dict, Optional, Any
 from dataclasses import dataclass, field
-from collections import defaultdict, deque
+from collections import deque
 from enum import Enum
-import math
 
 
 class SamplingStrategy(Enum):
@@ -276,7 +275,10 @@ class AdaptiveSampler:
                 should_log=should_log,
                 sample_rate_used=sample_rate,
                 strategy_used=self.config.strategy,
-                reason=f"Sampling at {sample_rate:.3f} rate using {self.config.strategy.value} strategy",
+                reason=(
+                    f"Sampling at {sample_rate:.3f} rate using "
+                    f"{self.config.strategy.value} strategy"
+                ),
                 stats={
                     "total_rate": self.total_logs.get_rate(60),
                     "sampled_rate": self.sampled_logs.get_rate(60),
@@ -286,7 +288,7 @@ class AdaptiveSampler:
 
     def _check_rate_limits(self) -> SamplingResult:
         """Check if rate limits allow logging."""
-        current_time = time.time()
+        # current_time = time.time()
 
         # Check burst limit
         if (
@@ -298,7 +300,10 @@ class AdaptiveSampler:
                 should_log=False,
                 sample_rate_used=0.0,
                 strategy_used=SamplingStrategy.BURST_ALLOWED,
-                reason=f"Burst limit exceeded ({self.config.burst_limit} logs in {self.config.burst_window_seconds}s)",
+                reason=(
+                    f"Burst limit exceeded ({self.config.burst_limit} logs "
+                    f"in {self.config.burst_window_seconds}s)"
+                ),
             )
 
         # Check rate limit
@@ -312,7 +317,10 @@ class AdaptiveSampler:
                 should_log=False,
                 sample_rate_used=0.0,
                 strategy_used=SamplingStrategy.RATE_LIMITED,
-                reason=f"Rate limit exceeded ({self.config.max_logs_per_second} logs/sec)",
+                reason=(
+                    f"Rate limit exceeded "
+                    f"({self.config.max_logs_per_second} logs/sec)"
+                ),
             )
 
         # Rate limits passed

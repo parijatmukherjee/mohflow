@@ -1,8 +1,8 @@
 """
 Advanced framework and application detection for intelligent auto-configuration.
 
-This module detects popular Python frameworks and adjusts logging configuration
-automatically for optimal integration and performance.
+This module detects popular Python frameworks and adjusts logging
+configuration automatically for optimal integration and performance.
 """
 
 import os
@@ -181,7 +181,9 @@ class FrameworkDetector:
                 supports_request_id=True,
                 supports_correlation=True,
                 recommended_formatter="structured",
-                integration_notes="Use Flask request context for log correlation",
+                integration_notes=(
+                    "Use Flask request context for log correlation"
+                ),
                 custom_config={
                     "enable_context_enrichment": True,
                     "context_enrichment": {
@@ -202,7 +204,9 @@ class FrameworkDetector:
                 supports_correlation=True,
                 default_log_level="INFO",
                 recommended_formatter="structured",
-                integration_notes="Integrates with Django's logging configuration",
+                integration_notes=(
+                    "Integrates with Django's logging configuration"
+                ),
                 custom_config={
                     "enable_context_enrichment": True,
                     "context_enrichment": {
@@ -233,7 +237,9 @@ class FrameworkDetector:
                 supports_request_id=True,
                 supports_correlation=True,
                 recommended_formatter="fast",  # High performance for async
-                integration_notes="Use async-safe handlers for best performance",
+                integration_notes=(
+                    "Use async-safe handlers for best performance"
+                ),
                 custom_config={
                     "async_handlers": True,
                     "formatter_type": "fast",
@@ -255,7 +261,9 @@ class FrameworkDetector:
                 has_middleware_support=True,
                 supports_request_id=True,
                 recommended_formatter="fast",
-                integration_notes="Use aiohttp middleware for request correlation",
+                integration_notes=(
+                    "Use aiohttp middleware for request correlation"
+                ),
                 custom_config={
                     "async_handlers": True,
                     "formatter_type": "fast",
@@ -415,7 +423,9 @@ class FrameworkDetector:
                 FrameworkInfo(
                     name="gunicorn",
                     version=self._get_module_version("gunicorn"),
-                    integration_notes="WSGI server - optimize for multi-process logging",
+                    integration_notes=(
+                        "WSGI server - optimize for multi-process logging"
+                    ),
                     custom_config={
                         "async_handlers": False,  # Gunicorn is sync
                         "formatter_type": "production",
