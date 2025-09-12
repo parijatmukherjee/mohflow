@@ -98,6 +98,45 @@ Use the JSON configuration:
 logger = MohflowLogger(config_file="mohflow_config.json")
 ```
 
+### Configuration Precedence
+
+MohFlow follows a clear configuration precedence order (highest to lowest priority):
+
+1. **Runtime parameters** (direct function arguments)
+2. **Environment variables** (prefixed with `MOHFLOW_`)
+3. **JSON configuration file**
+4. **Default values**
+
+```python
+# Example showing precedence
+logger = MohflowLogger(
+    config_file="config.json",        # Base configuration
+    environment="staging",            # Overrides config file
+    log_level="DEBUG"                 # Overrides environment variable
+)
+```
+
+### Environment Variables
+
+Configure MohFlow using environment variables:
+
+```bash
+export MOHFLOW_SERVICE_NAME="my-app"
+export MOHFLOW_LOG_LEVEL="INFO"
+export MOHFLOW_ENVIRONMENT="production"
+export MOHFLOW_CONSOLE_LOGGING="true"
+export MOHFLOW_LOKI_URL="http://loki:3100/loki/api/v1/push"
+
+# For nested configurations
+export MOHFLOW_CONTEXT_ENRICHMENT_INCLUDE_TIMESTAMP="true"
+export MOHFLOW_SENSITIVE_DATA_FILTER_ENABLED="true"
+```
+
+```python
+# Will automatically pick up environment variables
+logger = MohflowLogger()  # service_name from MOHFLOW_SERVICE_NAME
+```
+
 ### Auto-Configuration
 
 Enable automatic environment detection and configuration:
@@ -108,6 +147,227 @@ logger = MohflowLogger(
     service_name="my-app",
     enable_auto_config=True
 )
+```
+
+## Enhanced Features
+
+### Thread-Safe Context Management
+
+MohFlow provides thread-safe context management for microservices and async applications:
+
+```python
+from mohflow.context.enrichment import RequestContextManager
+from mohflow.context.correlation import get_correlation_id, set_correlation_id
+import threading
+
+def handle_request(request_id, user_id):
+    # Each thread gets its own context
+    with RequestContextManager(request_id=request_id, user_id=user_id):
+        logger.info("Processing request")
+        
+        # Correlation ID is automatically generated and thread-local
+        correlation_id = get_correlation_id()
+        logger.info("Generated correlation", correlation_id=correlation_id)
+
+# Multiple threads with independent contexts
+for i in range(3):
+    thread = threading.Thread(target=handle_request, args=(f"req-{i}", f"user-{i}"))
+    thread.start()
+```
+
+### Sensitive Data Protection
+
+Automatic detection and redaction of sensitive information:
+
+```python
+# Built-in patterns detect and redact sensitive data
+logger.info("User registration", 
+    username="john_doe",
+    password="secret123",           # [REDACTED]
+    email="john@example.com",       # [REDACTED] 
+    credit_card="4111-1111-1111-1111",  # [REDACTED]
+    api_key="sk-abc123def456"       # [REDACTED]
+)
+
+# Add custom sensitive patterns
+logger.add_sensitive_field("internal_id")
+logger.info("Processing", internal_id="12345")  # [REDACTED]
+```
+
+### Auto-Configuration with Environment Detection
+
+Automatically configure logging based on your deployment environment:
+
+```python
+# Detects AWS, GCP, Azure, Kubernetes, Docker, etc.
+logger = MohflowLogger(
+    service_name="my-app",
+    enable_auto_config=True  # Automatically configures based on environment
+)
+
+# Get detected environment information
+env_info = logger.get_environment_info()
+print(f"Running on: {env_info}")
+# Output: {'cloud_provider': 'aws', 'region': 'us-east-1', 'environment_type': 'production'}
+```
+
+### Custom Context Enrichers
+
+Add custom metadata to all log messages:
+
+```python
+import os
+
+# Add custom enrichers
+logger.add_custom_enricher("version", lambda: os.getenv("APP_VERSION", "unknown"))
+logger.add_custom_enricher("build", lambda: os.getenv("BUILD_NUMBER", "dev"))
+
+# All logs will now include version and build information
+logger.info("Application started")  # Includes version and build fields
+```
+
+### Factory Methods for Common Use Cases
+
+Convenient factory methods for quick setup:
+
+```python
+# Create logger with auto-configuration
+logger = MohflowLogger.with_auto_config(
+    service_name="my-app"
+)
+
+# Create logger from configuration file
+logger = MohflowLogger.from_config_file(
+    "config.json",
+    log_level="DEBUG"  # Override specific settings
+)
+```
+
+## Practical Usage Examples
+
+### Complete Microservice Setup
+
+```python
+from mohflow import MohflowLogger
+from mohflow.context.enrichment import RequestContextManager
+from mohflow.context.correlation import get_correlation_id
+import os
+import uuid
+
+# Initialize with full feature set
+logger = MohflowLogger(
+    service_name="payment-service",
+    environment=os.getenv("ENVIRONMENT", "development"),
+    enable_auto_config=True,           # Auto-detect cloud environment
+    enable_context_enrichment=True,    # Add system metadata
+    enable_sensitive_data_filter=True, # Protect sensitive data
+    loki_url=os.getenv("LOKI_URL"),    # Optional Loki integration
+)
+
+def process_payment(user_id: str, amount: float, card_number: str):
+    """Process payment with full observability"""
+    request_id = str(uuid.uuid4())
+    
+    with RequestContextManager(
+        request_id=request_id, 
+        user_id=user_id,
+        operation_name="process_payment"
+    ):
+        logger.info("Payment processing started", 
+            amount=amount,
+            currency="USD"
+        )
+        
+        try:
+            # Sensitive data is automatically redacted
+            logger.debug("Payment details", 
+                card_number=card_number,  # [REDACTED]
+                amount=amount
+            )
+            
+            # Simulate payment processing
+            if amount > 0:
+                # Get correlation ID for external service calls
+                correlation_id = get_correlation_id()
+                
+                # Call external payment gateway
+                # headers = {"X-Correlation-ID": correlation_id}
+                
+                logger.info("Payment processed successfully", 
+                    transaction_id=f"txn_{request_id}",
+                    status="completed"
+                )
+                return {"status": "success", "transaction_id": f"txn_{request_id}"}
+            else:
+                raise ValueError("Invalid amount")
+                
+        except Exception as e:
+            logger.error("Payment processing failed", 
+                error=str(e),
+                error_type=type(e).__name__,
+                exc_info=True
+            )
+            raise
+
+# Usage
+result = process_payment("user_123", 99.99, "4111-1111-1111-1111")
+```
+
+### Flask Application with Request Tracking
+
+```python
+from flask import Flask, request, g
+from mohflow import MohflowLogger
+from mohflow.context.enrichment import RequestContextManager
+import uuid
+import time
+
+app = Flask(__name__)
+
+# Initialize logger with auto-configuration
+logger = MohflowLogger(
+    service_name="flask-api",
+    enable_auto_config=True,
+    enable_context_enrichment=True,
+    enable_sensitive_data_filter=True
+)
+
+@app.before_request
+def before_request():
+    """Set up request context for each request"""
+    g.request_id = str(uuid.uuid4())
+    g.start_time = time.time()
+
+@app.after_request
+def after_request(response):
+    """Log request completion"""
+    duration = time.time() - g.start_time
+    logger.info("Request completed",
+        method=request.method,
+        path=request.path,
+        status_code=response.status_code,
+        duration_ms=round(duration * 1000, 2),
+        user_agent=request.headers.get('User-Agent')
+    )
+    return response
+
+@app.route('/api/users/<user_id>')
+def get_user(user_id):
+    with RequestContextManager(
+        request_id=g.request_id,
+        user_id=user_id,
+        operation_name="get_user"
+    ):
+        logger.info("Fetching user data")
+        
+        # Simulate database query
+        user_data = {"id": user_id, "name": "John Doe"}
+        
+        logger.info("User data retrieved", user_found=True)
+        return user_data
+
+if __name__ == '__main__':
+    app.run(debug=True)
 ```
 
 ## Advanced Features
@@ -135,10 +395,11 @@ python -m mohflow.cli --test --service-name "my-app" --loki-url "http://localhos
 Automatically enrich logs with system metadata and request correlation:
 
 ```python
-from mohflow.context import set_request_context, get_correlation_id
+from mohflow.context.enrichment import RequestContextManager
+from mohflow.context.correlation import get_correlation_id
 
 # Set request context for distributed tracing
-with set_request_context(request_id="req-123", user_id="user-456"):
+with RequestContextManager(request_id="req-123", user_id="user-456"):
     logger.info("Processing request")  # Automatically includes request context
     
     # Get correlation ID for external service calls
@@ -190,7 +451,7 @@ logger = MohflowLogger(
 ```python
 from fastapi import FastAPI, Request
 from mohflow import MohflowLogger
-from mohflow.context import set_request_context
+from mohflow.context.enrichment import RequestContextManager
 import uuid
 
 app = FastAPI()
@@ -209,7 +470,7 @@ async def logging_middleware(request: Request, call_next):
     request_id = str(uuid.uuid4())
     
     # Set request context for correlation
-    with set_request_context(request_id=request_id, path=str(request.url.path)):
+    with RequestContextManager(request_id=request_id, path=str(request.url.path)):
         logger.info("Request started", method=request.method)
         response = await call_next(request)
         logger.info("Request completed", status_code=response.status_code)
@@ -246,12 +507,12 @@ logger.info("Service started")  # Includes hostname, process_id, thread_id, etc.
 ```python
 import requests
 from mohflow import MohflowLogger
-from mohflow.context import set_request_context, get_correlation_id
+from mohflow.context.enrichment import RequestContextManager, get_correlation_id
 
 logger = MohflowLogger(service_name="user-service", enable_auto_config=True)
 
 def process_user_request(user_id: str):
-    with set_request_context(request_id=f"user-{user_id}", user_id=user_id):
+    with RequestContextManager(request_id=f"user-{user_id}", user_id=user_id):
         logger.info("Processing user request")
         
         # Get correlation ID for downstream services
