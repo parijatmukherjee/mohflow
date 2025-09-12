@@ -10,7 +10,7 @@ This module provides advanced context management capabilities including:
 
 import threading
 import contextvars
-from typing import Dict, Any, Optional, Generator, Union
+from typing import Dict, Any, Optional, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime

@@ -6,12 +6,9 @@ automatically for optimal integration and performance.
 """
 
 import os
-import sys
 import importlib.util
-from typing import Dict, Any, Optional, List, Set, Tuple
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
-from pathlib import Path
-import inspect
 import logging
 
 
@@ -545,7 +542,7 @@ class FrameworkDetector:
                 with open(__main__.__file__, "r") as f:
                     content = f.read()
                     return "argparse" in content or "click" in content
-        except:
+        except Exception:
             pass
         return False
 

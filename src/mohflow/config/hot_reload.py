@@ -5,10 +5,8 @@ Enables runtime configuration changes without application restart
 using file watching, signal handling, and configuration versioning.
 """
 
-import os
 import time
 import json
-import yaml
 import threading
 import signal
 import hashlib

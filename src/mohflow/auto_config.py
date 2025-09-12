@@ -452,7 +452,8 @@ class AutoConfigurator:
         self, base_config: Dict[str, Any], service_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Get intelligent configuration combining environment and framework detection.
+        Get intelligent configuration combining environment and framework
+        detection.
 
         Args:
             base_config: Base configuration to enhance
@@ -535,21 +536,24 @@ class AutoConfigurator:
                 "enable_request_correlation"
             ] = True
             recommendations["performance_notes"].append(
-                "Web apps benefit from request correlation and structured logging"
+                "Web apps benefit from request correlation and structured "
+                "logging"
             )
 
         elif app_info.app_type == "api":
             recommendations["recommendations"]["formatter"] = "fast"
             recommendations["recommendations"]["async_handlers"] = True
             recommendations["performance_notes"].append(
-                "API services need fast, non-blocking logging for high throughput"
+                "API services need fast, non-blocking logging for high "
+                "throughput"
             )
 
         elif app_info.uses_async:
             recommendations["recommendations"]["async_handlers"] = True
             recommendations["recommendations"]["formatter"] = "fast"
             recommendations["performance_notes"].append(
-                "Async applications require async-safe handlers to avoid blocking"
+                "Async applications require async-safe handlers to avoid "
+                "blocking"
             )
 
         return recommendations
