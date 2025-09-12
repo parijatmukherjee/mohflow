@@ -39,7 +39,7 @@ MohFlow is built with enterprise-grade code quality standards:
 - ✅ **Production Tested** - Comprehensive test coverage with real-world scenarios
 - ✅ **Clean Architecture** - Modular design with clear separation of concerns
 
-### Recent Improvements (v1.0.8+)
+### Recent Improvements (v1.0.0+)
 
 - 🔧 **Enhanced Lint Compliance**: Resolved all code style violations for production readiness
 - 🚀 **Optimized Performance**: Improved async handlers and reduced memory footprint
