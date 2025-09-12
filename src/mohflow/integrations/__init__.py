@@ -17,17 +17,17 @@ Example usage:
     # FastAPI
     from mohflow.integrations.fastapi import MohFlowMiddleware
     app.add_middleware(MohFlowMiddleware, logger=logger)
-    
+
     # Django
     MIDDLEWARE = [
         'mohflow.integrations.django.MohFlowMiddleware',
         ...
     ]
-    
-    # Flask  
+
+    # Flask
     from mohflow.integrations.flask import MohFlowExtension
     mohflow = MohFlowExtension(app, logger=logger)
-    
+
     # Celery
     from mohflow.integrations.celery import setup_celery_logging
     setup_celery_logging(logger)

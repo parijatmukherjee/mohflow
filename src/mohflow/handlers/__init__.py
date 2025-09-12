@@ -15,7 +15,7 @@ __all__ = [
     "LokiHandler",
     "AsyncSafeHandler",
     "AsyncFileHandler",
-    "AsyncRotatingFileHandler", 
+    "AsyncRotatingFileHandler",
     "AsyncNetworkHandler",
     "BatchedAsyncHandler",
     "AsyncLokiHandler",
