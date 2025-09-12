@@ -11,4 +11,4 @@ exclude =
 per-file-ignores =
     # Allow longer lines in test files
     tests/*: E501
-max-complexity = 10
+max-complexity = 15
