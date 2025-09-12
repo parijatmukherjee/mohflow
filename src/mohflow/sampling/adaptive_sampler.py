@@ -288,7 +288,6 @@ class AdaptiveSampler:
 
     def _check_rate_limits(self) -> SamplingResult:
         """Check if rate limits allow logging."""
-        # current_time = time.time()
 
         # Check burst limit
         if (
