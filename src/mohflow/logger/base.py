@@ -15,12 +15,12 @@ class MohflowLogger:
 
     def __init__(
         self,
-        service_name: str,
-        environment: str = "development",
+        service_name: Optional[str] = None,
+        environment: Optional[str] = None,
         loki_url: Optional[str] = None,
-        log_level: str = "INFO",
-        console_logging: bool = True,
-        file_logging: bool = False,
+        log_level: Optional[str] = None,
+        console_logging: Optional[bool] = None,
+        file_logging: Optional[bool] = None,
         log_file_path: Optional[str] = None,
         config_file: Optional[str] = None,
         enable_auto_config: bool = False,
@@ -171,9 +171,7 @@ class MohflowLogger:
 
         # Apply context enrichment
         if self.context_enricher:
-            enriched_extra = self.context_enricher.enrich_log_record(
-                enriched_extra
-            )
+            enriched_extra = self.context_enricher.enrich_dict(enriched_extra)
 
         # Apply sensitive data filtering
         if self.sensitive_filter:

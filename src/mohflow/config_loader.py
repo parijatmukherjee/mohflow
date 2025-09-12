@@ -22,7 +22,11 @@ class ConfigLoader:
     4. Default values
     """
 
-    def __init__(self, config_file: Optional[Union[str, Path]] = None, env_prefix: str = "MOHFLOW_"):
+    def __init__(
+        self,
+        config_file: Optional[Union[str, Path]] = None,
+        env_prefix: str = "MOHFLOW_",
+    ):
         """
         Initialize configuration loader.
 
@@ -56,13 +60,20 @@ class ConfigLoader:
         if not self.config_file:
             return {}
 
-        if not self.config_file.exists():
+        # Convert to Path if it's a string
+        config_path = (
+            Path(self.config_file)
+            if isinstance(self.config_file, str)
+            else self.config_file
+        )
+
+        if not config_path.exists():
             raise ConfigurationError(
-                f"Configuration file not found: {self.config_file}"
+                f"Configuration file not found: {config_path}"
             )
 
         try:
-            with open(self.config_file, "r") as f:
+            with open(config_path, "r") as f:
                 config = json.load(f)
             return config if isinstance(config, dict) else {}
         except json.JSONDecodeError as e:
@@ -76,13 +87,13 @@ class ConfigLoader:
         """Load configuration from JSON file"""
         if not os.path.exists(config_file):
             return {}
-        
+
         try:
             with open(config_file, "r") as f:
                 return json.load(f)
         except FileNotFoundError:
             return {}
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             return {}
 
     def _load_env_config(self) -> Dict[str, Any]:
@@ -114,6 +125,32 @@ class ConfigLoader:
                     )
                 else:
                     env_config[config_key] = value
+
+        # Handle nested environment variables
+        for key, value in os.environ.items():
+            if key.startswith(env_prefix) and key not in env_mappings:
+                # Remove prefix and convert to lowercase
+                config_key = key[len(env_prefix) :].lower()
+
+                # Handle nested keys (e.g., CONTEXT_ENRICHMENT_INCLUDE_TIMESTAMP)  # noqa: E501
+                if "_" in config_key:
+                    parts = config_key.split("_")
+                    current = env_config
+
+                    # Navigate/create nested structure
+                    for part in parts[:-1]:
+                        if part not in current:
+                            current[part] = {}
+                        current = current[part]
+
+                    # Set the final value with type conversion
+                    final_key = parts[-1]
+                    if value.lower() in ("true", "false"):
+                        current[final_key] = value.lower() == "true"
+                    elif value.isdigit():
+                        current[final_key] = int(value)
+                    else:
+                        current[final_key] = value
 
         return env_config
 
@@ -197,11 +234,13 @@ class ConfigLoader:
                     "CRITICAL",
                 ]
                 if config["log_level"] not in valid_levels:
-                    raise ValueError(f"Invalid log_level: {config['log_level']}")
+                    raise ValueError(
+                        f"Invalid log_level: {config['log_level']}"
+                    )
 
             # Validate environment
             if "environment" in config:
-                valid_envs = ["development", "staging", "production"]
+                valid_envs = ["development", "staging", "production", "test"]
                 if config["environment"] not in valid_envs:
                     raise ConfigurationError(
                         f"Invalid environment: {config['environment']}"
@@ -214,7 +253,7 @@ class ConfigLoader:
                 )
 
             return True
-        except ConfigurationError:
+        except (ValueError, ConfigurationError):
             raise
         except Exception as e:
             raise ConfigurationError(f"Configuration validation failed: {e}")
@@ -230,13 +269,13 @@ class ConfigLoader:
             return True
         elif value.lower() in ("false", "0", "no", "off"):
             return False
-        
+
         # Try to convert to integer
         try:
             return int(value)
         except ValueError:
             pass
-        
+
         # Return as string
         return value
 
@@ -246,44 +285,59 @@ class ConfigLoader:
             "type": "object",
             "properties": {
                 "service_name": {"type": "string"},
-                "log_level": {"type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]},
+                "log_level": {
+                    "type": "string",
+                    "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                },
                 "console_logging": {"type": "boolean"},
                 "file_logging": {"type": "boolean"},
-                "environment": {"type": "string", "enum": ["development", "staging", "production"]},
-                "loki_url": {"type": "string"}
+                "environment": {
+                    "type": "string",
+                    "enum": ["development", "staging", "production"],
+                },
+                "loki_url": {"type": "string"},
             },
-            "required": ["service_name"]
+            "required": ["service_name"],
         }
 
     def validate_against_schema(self, config: Dict[str, Any]) -> bool:
         """Validate configuration against schema"""
         try:
             schema = self.get_config_schema()
-            
+
             # Check required fields
             for field in schema.get("required", []):
                 if field not in config:
                     return False
-            
+
             # Check property types and enums
             for key, value in config.items():
                 if key in schema["properties"]:
                     prop_schema = schema["properties"][key]
-                    
+
                     # Check type
                     if "type" in prop_schema:
                         expected_type = prop_schema["type"]
-                        if expected_type == "string" and not isinstance(value, str):
+                        if expected_type == "string" and not isinstance(
+                            value, str
+                        ):
                             return False
-                        elif expected_type == "boolean" and not isinstance(value, bool):
+                        elif expected_type == "boolean" and not isinstance(
+                            value, bool
+                        ):
                             return False
-                        elif expected_type == "integer" and not isinstance(value, int):
+                        elif expected_type == "integer" and not isinstance(
+                            value, int
+                        ):
                             return False
-                    
+
                     # Check enum values
-                    if "enum" in prop_schema and value not in prop_schema["enum"]:
+                    if (
+                        "enum" in prop_schema
+                        and value not in prop_schema["enum"]
+                    ):
                         return False
-            
+
             return True
         except Exception:
             return False
@@ -333,8 +387,9 @@ class ConfigLoader:
         }
 
         # Merge configurations (later ones override earlier ones)
+        # Precedence: runtime > env > json > default
         final_config = self._merge_configs(
-            default_config, env_config, json_config, runtime_config
+            default_config, json_config, env_config, runtime_config
         )
 
         # Validate final configuration

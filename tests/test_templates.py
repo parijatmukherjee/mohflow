@@ -2,6 +2,7 @@
 
 import pytest
 import json
+import requests
 from unittest.mock import Mock, patch, mock_open
 from mohflow.templates.template_manager import (
     TemplateManager,
@@ -158,6 +159,9 @@ class TestTemplateManager:
         mock_response = Mock()
         mock_response.status_code = 400
         mock_response.text = "Bad Request"
+        mock_response.raise_for_status.side_effect = requests.HTTPError(
+            "400 Client Error"
+        )
         mock_post.return_value = mock_response
 
         with pytest.raises(Exception, match="Failed to deploy dashboard"):
@@ -241,6 +245,9 @@ class TestTemplateManager:
         mock_response = Mock()
         mock_response.status_code = 500
         mock_response.text = "Internal Server Error"
+        mock_response.raise_for_status.side_effect = requests.HTTPError(
+            "500 Internal Server Error"
+        )
         mock_post.return_value = mock_response
 
         with pytest.raises(Exception, match="Failed to deploy dashboard"):

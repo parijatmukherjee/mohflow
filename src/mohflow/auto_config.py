@@ -7,7 +7,6 @@ import os
 import socket
 import platform
 import subprocess
-from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass
 import logging
@@ -123,9 +122,7 @@ class AutoConfigurator:
         if env_info.orchestrator == "kubernetes":
             config["namespace"] = env_info.namespace
             # Add context enrichment for Kubernetes
-            config["context_enrichment"] = {
-                "include_system_info": True
-            }
+            config["context_enrichment"] = {"include_system_info": True}
 
         return config
 
@@ -433,6 +430,9 @@ class AutoConfigurator:
         """
         env_info = self.detect_environment()
         config = base_config.copy()
+
+        # Set the environment type from auto-detection
+        config["environment"] = env_info.environment_type
 
         # Apply environment-specific configurations
         self._apply_environment_config(config, env_info)

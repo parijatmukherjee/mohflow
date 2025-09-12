@@ -1,12 +1,16 @@
 import pytest
+import logging
+from unittest.mock import Mock, patch
 from mohflow.handlers.loki import LokiHandler
 from mohflow.exceptions import ConfigurationError
-import logging
 
 
-def test_loki_handler_setup(mocker):
+@patch("logging_loki.LokiHandler")
+def test_loki_handler_setup(mock_loki_class):
     """Test Loki handler setup"""
-    mock_formatter = mocker.Mock(spec=logging.Formatter)
+    mock_formatter = Mock(spec=logging.Formatter)
+    mock_handler_instance = Mock()
+    mock_loki_class.return_value = mock_handler_instance
 
     handler = LokiHandler.setup(
         url="http://loki:3100",
@@ -16,14 +20,24 @@ def test_loki_handler_setup(mocker):
     )
 
     assert handler is not None
-    assert handler.formatter == mock_formatter
+    assert handler == mock_handler_instance
+    mock_loki_class.assert_called_once_with(
+        url="http://loki:3100",
+        tags={
+            "service": "test-service",
+            "environment": "test",
+        },
+        version="1",
+    )
+    mock_handler_instance.setFormatter.assert_called_once_with(mock_formatter)
 
 
-def test_loki_handler_with_extra_tags(mocker):
+@patch("logging_loki.LokiHandler")
+def test_loki_handler_with_extra_tags(mock_loki_class):
     """Test Loki handler with extra tags"""
-    # Mock the LokiHandler class
-    mock_loki_class = mocker.patch("logging_loki.LokiHandler")
-    mock_formatter = mocker.Mock(spec=logging.Formatter)
+    mock_formatter = Mock(spec=logging.Formatter)
+    mock_handler_instance = Mock()
+    mock_loki_class.return_value = mock_handler_instance
     extra_tags = {"app_version": "1.0.0"}
 
     # Create handler
@@ -39,21 +53,26 @@ def test_loki_handler_with_extra_tags(mocker):
     mock_loki_class.assert_called_once()
     call_kwargs = mock_loki_class.call_args[1]
     assert "tags" in call_kwargs
-    assert call_kwargs["tags"]["app_version"] == "1.0.0"
+    expected_tags = {
+        "service": "test-service",
+        "environment": "test",
+        "app_version": "1.0.0",
+    }
+    assert call_kwargs["tags"] == expected_tags
 
 
-def test_loki_handler_error(mocker):
+@patch("logging_loki.LokiHandler")
+def test_loki_handler_error(mock_loki_class):
     """Test Loki handler error handling"""
-    mocker.patch(
-        "logging_loki.LokiHandler", side_effect=Exception("Connection failed")
-    )
+    mock_formatter = Mock(spec=logging.Formatter)
+    mock_loki_class.side_effect = Exception("Connection failed")
 
     with pytest.raises(ConfigurationError) as exc_info:
         LokiHandler.setup(
             url="http://invalid-url",
             service_name="test-service",
             environment="test",
-            formatter=mocker.Mock(),
+            formatter=mock_formatter,
         )
 
     assert "Failed to setup Loki logging" in str(exc_info.value)

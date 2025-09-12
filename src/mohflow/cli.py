@@ -118,7 +118,9 @@ class MohflowCLI:
 
         return parser
 
-    def load_config_from_file(self, config_path: str, exit_on_error: bool = True) -> Dict[str, Any]:
+    def load_config_from_file(
+        self, config_path: str, exit_on_error: bool = True
+    ) -> Dict[str, Any]:
         """Load configuration from JSON file"""
         try:
             with open(config_path, "r") as f:
@@ -168,7 +170,9 @@ class MohflowCLI:
     def validate_config(self, config_file: str) -> bool:
         """Validate configuration file"""
         try:
-            config = self.load_config_from_file(config_file, exit_on_error=False)
+            config = self.load_config_from_file(
+                config_file, exit_on_error=False
+            )
             return self.validate_configuration(config)
         except Exception:
             return False
@@ -181,8 +185,10 @@ class MohflowCLI:
         """Validate logging configuration"""
         try:
             # Check required fields
-            if "service_name" not in config:
-                print("❌ Missing required field: service_name")
+            if "service_name" not in config or not config["service_name"]:
+                print(
+                    "❌ Missing required field: service_name", file=sys.stderr
+                )
                 return False
 
             # Validate file logging configuration
@@ -223,17 +229,17 @@ class MohflowCLI:
                 "log_level": getattr(args, "log_level", "INFO"),
                 "enable_auto_config": getattr(args, "auto_config", False),
             }
-            
+
             # Only add loki_url if it's not None
             loki_url = getattr(args, "loki_url", None)
             if loki_url is not None:
                 logger_kwargs["loki_url"] = loki_url
-                
+
             # Only add config_file if it's not None
             config_file = getattr(args, "config_file", None)
             if config_file is not None:
                 logger_kwargs["config_file"] = config_file
-            
+
             logger = MohflowLogger(**logger_kwargs)
             print(f"✅ Logger created for service: {args.service_name}")
             return logger
@@ -270,7 +276,7 @@ class MohflowCLI:
 
         while True:
             try:
-                command = input("mohflow> ").strip().lower()
+                command = input("mohflow> ").strip()
                 if self._handle_command(command, logger):
                     break
             except (KeyboardInterrupt, EOFError):
@@ -280,15 +286,37 @@ class MohflowCLI:
 
     def _handle_command(self, command: str, logger: MohflowLogger) -> bool:
         """Handle interactive command. Returns True if should exit."""
-        if command in ["quit", "exit"]:
+        cmd_lower = command.lower()
+
+        if cmd_lower in ["quit", "exit"]:
             return True
 
-        if command in ["debug", "info", "warning", "error"]:
-            getattr(logger, command)(f"Interactive {command} message")
+        if cmd_lower == "help":
+            print("Available commands:")
+            print("  debug    - Log debug message")
+            print("  info     - Log info message")
+            print("  warning  - Log warning message")
+            print("  error    - Log error message")
+            print("  level <LEVEL> - Set log level")
+            print("  status   - Show logger status")
+            print("  help     - Show this help")
+            print("  quit     - Exit interactive session")
             return False
 
-        if command.startswith("level "):
+        if cmd_lower == "status":
+            self._handle_status_command(logger)
+            return False
+
+        if cmd_lower in ["debug", "info", "warning", "error"]:
+            getattr(logger, cmd_lower)(f"Interactive {cmd_lower} message")
+            return False
+
+        if cmd_lower.startswith("level "):
             self._handle_level_command(command, logger)
+            return False
+
+        if cmd_lower.startswith("log "):
+            self._handle_log_command(command, logger)
             return False
 
         print(
@@ -310,6 +338,34 @@ class MohflowCLI:
                 "ERROR, CRITICAL"
             )
 
+    def _handle_log_command(self, command: str, logger: MohflowLogger):
+        """Handle log command with level and message"""
+        parts = command.split(" ", 2)
+        if len(parts) < 3:
+            print("Usage: log <level> <message>")
+            return
+
+        level = parts[1].lower()
+        message = parts[2].strip('"').strip("'")  # Remove quotes if present
+
+        if level in ["debug", "info", "warning", "error", "critical"]:
+            getattr(logger, level)(message)
+        else:
+            print(f"Invalid log level: {level}")
+            print("Valid levels: debug, info, warning, error, critical")
+
+    def _handle_status_command(self, logger: MohflowLogger):
+        """Handle status command to show logger information"""
+        print("Logger Status:")
+        if hasattr(logger, "config") and logger.config:
+            if hasattr(logger.config, "service_name"):
+                print(f"Service Name: {logger.config.service_name}")
+            if hasattr(logger.config, "log_level"):
+                print(f"Log Level: {logger.config.log_level}")
+        else:
+            print("Service Name: Unknown")
+            print("Log Level: Unknown")
+
     def run(self, args: Optional[list] = None) -> int:
         """Main CLI execution"""
         parsed_args = self.parser.parse_args(args)
@@ -328,7 +384,14 @@ class MohflowCLI:
 
         # Validate configuration
         if parsed_args.validate_config:
-            return 0 if self.validate_configuration(final_config) else 1
+            config_file = (
+                getattr(parsed_args, "config_file", None) or parsed_args.config
+            )
+            if config_file:
+                result = self.validate_config(config_file)
+            else:
+                result = self.validate_configuration(final_config)
+            return 0 if result else 1
 
         if not self.validate_configuration(final_config):
             return 1
@@ -350,7 +413,10 @@ class MohflowCLI:
 def main():
     """Entry point for CLI"""
     cli = MohflowCLI()
-    return cli.run()
+    result = cli.run()
+    if result != 0:
+        sys.exit(result)
+    return result
 
 
 if __name__ == "__main__":

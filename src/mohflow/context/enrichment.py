@@ -164,7 +164,7 @@ class ContextEnricher:
         self._cache_time: float = 0
         self._cache_ttl: float = 300  # 5 minutes cache TTL
 
-    def enrich_log_record(self, record) -> "LogRecord":
+    def enrich_log_record(self, record):
         """
         Enrich log record with context information.
 
@@ -357,6 +357,12 @@ class RequestContextManager:
         # Save previous context
         self._previous_context = _request_context.get()
 
+        # Generate correlation_id if not provided
+        if not self.correlation_id:
+            import uuid
+
+            self.correlation_id = str(uuid.uuid4())
+
         # Set new context
         context = RequestContext(
             request_id=self.request_id,
@@ -368,12 +374,30 @@ class RequestContextManager:
         )
 
         _request_context.set(context)
+
+        # Also set correlation ID in the correlation module
+        from mohflow.context.correlation import set_correlation_id
+
+        if self.correlation_id:
+            set_correlation_id(self.correlation_id)
+
         return context
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit request context"""
         # Restore previous context
         _request_context.set(self._previous_context)
+
+        # Restore previous correlation ID
+        from mohflow.context.correlation import set_correlation_id
+
+        if self._previous_context and self._previous_context.correlation_id:
+            set_correlation_id(self._previous_context.correlation_id)
+        else:
+            # Clear correlation ID if no previous context
+            from mohflow.context.correlation import _correlation_id
+
+            _correlation_id.set(None)
 
 
 class GlobalContextManager:
@@ -409,11 +433,11 @@ class GlobalContextManager:
 def with_request_context(context_or_request_id=None, **kwargs):
     """
     Create a context manager or decorator for request context.
-    
+
     Usage as context manager:
         with with_request_context(context):
             # context is a RequestContext instance
-            
+
     Usage as decorator:
         @with_request_context(request_id="req-123")
         def my_function():
@@ -427,17 +451,27 @@ def with_request_context(context_or_request_id=None, **kwargs):
             user_id=context_or_request_id.user_id,
             session_id=context_or_request_id.session_id,
             operation_name=context_or_request_id.operation_name,
-            **context_or_request_id.custom_fields
+            **context_or_request_id.custom_fields,
         )
     else:
         # Used as decorator with individual parameters
         request_id = context_or_request_id
-        correlation_id = kwargs.get('correlation_id')
-        user_id = kwargs.get('user_id') 
-        session_id = kwargs.get('session_id')
-        operation_name = kwargs.get('operation_name')
-        custom_fields = {k: v for k, v in kwargs.items() if k not in ['correlation_id', 'user_id', 'session_id', 'operation_name']}
-        
+        correlation_id = kwargs.get("correlation_id")
+        user_id = kwargs.get("user_id")
+        session_id = kwargs.get("session_id")
+        operation_name = kwargs.get("operation_name")
+        custom_fields = {
+            k: v
+            for k, v in kwargs.items()
+            if k
+            not in [
+                "correlation_id",
+                "user_id",
+                "session_id",
+                "operation_name",
+            ]
+        }
+
         def decorator(func):
             def wrapper(*args, **func_kwargs):
                 op_name = operation_name or func.__name__
@@ -450,8 +484,11 @@ def with_request_context(context_or_request_id=None, **kwargs):
                     **custom_fields,
                 ):
                     return func(*args, **func_kwargs)
+
             return wrapper
+
         return decorator
+
 
 # Legacy decorator function
 def with_request_context_decorator(

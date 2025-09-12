@@ -192,7 +192,7 @@ class TestConfigLoader:
         }
 
         with patch.object(
-            self.loader, "_load_file_config", return_value=file_config
+            self.loader, "_load_json_config", return_value=file_config
         ):
             with patch.object(
                 self.loader, "_load_env_config", return_value=env_config
@@ -222,7 +222,7 @@ class TestConfigLoader:
         loader = ConfigLoader(config_file="test_config.json")
 
         with patch.object(
-            loader, "_load_file_config", return_value=test_config
+            loader, "_load_json_config", return_value=test_config
         ):
             with patch.object(loader, "_load_env_config", return_value={}):
                 config = loader.load_config()
@@ -255,23 +255,23 @@ class TestConfigLoader:
 
     def test_load_config_with_nested_env_vars(self):
         """Test loading configuration with nested environment variables."""
-        with patch("os.environ.get") as mock_env_get:
+        env_vars = {
+            "MOHFLOW_SERVICE_NAME": "nested-service",
+            "MOHFLOW_CONTEXT_ENRICHMENT_INCLUDE_TIMESTAMP": "true",
+            "MOHFLOW_CONTEXT_ENRICHMENT_INCLUDE_SYSTEM_INFO": "false",
+        }
 
-            def env_side_effect(key, default=None):
-                env_vars = {
-                    "MOHFLOW_SERVICE_NAME": "nested-service",
-                    "MOHFLOW_CONTEXT_ENRICHMENT_INCLUDE_TIMESTAMP": "true",
-                    "MOHFLOW_CONTEXT_ENRICHMENT_INCLUDE_SYSTEM_INFO": "false",
-                }
-                return env_vars.get(key, default)
-
-            mock_env_get.side_effect = env_side_effect
-
+        with patch("os.environ", env_vars):
             config = self.loader._load_env_config()
 
             assert config["service_name"] == "nested-service"
-            assert config["context_enrichment"]["include_timestamp"] is True
-            assert config["context_enrichment"]["include_system_info"] is False
+            assert (
+                config["context"]["enrichment"]["include"]["timestamp"] is True
+            )
+            assert (
+                config["context"]["enrichment"]["include"]["system"]["info"]
+                is False
+            )
 
     def test_get_config_schema(self):
         """Test configuration schema retrieval."""

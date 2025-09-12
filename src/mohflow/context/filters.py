@@ -41,7 +41,7 @@ class SensitiveDataFilter:
         self.redaction_text = redaction_text
         self.max_field_length = max_field_length
         self.case_sensitive = case_sensitive
-        
+
         # Build sensitive fields set
         base_fields = set(SECURITY_CONFIG.SENSITIVE_FIELDS)
         if sensitive_fields:
@@ -50,10 +50,15 @@ class SensitiveDataFilter:
 
         # Build sensitive patterns list (as strings for tests)
         base_patterns = [
-            "password", "secret", "token", "api_key", "credit_card", "ssn",
+            "password",
+            "secret",
+            "token",
+            "api_key",
+            "credit_card",
+            "ssn",
             r"\d{4}-\d{4}-\d{4}-\d{4}",  # Credit card
-            r"\d{3}-\d{2}-\d{4}",        # SSN
-            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"  # Email
+            r"\d{3}-\d{2}-\d{4}",  # SSN
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",  # Email
         ]
         if sensitive_patterns:
             base_patterns.extend(sensitive_patterns)
@@ -64,7 +69,9 @@ class SensitiveDataFilter:
         # Prepare field lookup set
         if not case_sensitive:
             self.sensitive_fields_lower = {
-                field.lower() for field in self.sensitive_fields if field is not None
+                field.lower()
+                for field in self.sensitive_fields
+                if field is not None
             }
         else:
             self.sensitive_fields_lower = self.sensitive_fields
@@ -127,34 +134,46 @@ class SensitiveDataFilter:
         check_name = (
             field_name.lower() if not self.case_sensitive else field_name
         )
-        
+
         # Check if any pattern matches the field name
         for pattern in self.sensitive_patterns:
             if isinstance(pattern, str):
                 if pattern.lower() in check_name:
                     return True
-        
+
         return check_name in self.sensitive_fields_lower
 
     def _is_sensitive_value(self, value: str) -> bool:
         """Check if a value contains sensitive patterns"""
         if not isinstance(value, str):
             return False
-        
+
         import re
-        for pattern in self.sensitive_patterns:
-            if isinstance(pattern, str):
-                # Convert common patterns to regex
-                if pattern == r"\d{4}-\d{4}-\d{4}-\d{4}":
-                    if re.match(r"\d{4}-\d{4}-\d{4}-\d{4}", value):
-                        return True
-                elif pattern == r"\d{3}-\d{2}-\d{4}":
-                    if re.match(r"\d{3}-\d{2}-\d{4}", value):
-                        return True
-                elif "@" in pattern and "@" in value:
-                    # Simple email check
-                    if re.match(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", value):
-                        return True
+
+        # Define comprehensive regex patterns for sensitive data
+        patterns = [
+            # Credit card numbers - with and without dashes/spaces
+            r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b",
+            r"\b\d{16}\b",
+            # SSN patterns - with and without dashes
+            r"\b\d{3}-\d{2}-\d{4}\b",
+            r"\b\d{9}\b",
+            # Email addresses
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            # Phone numbers
+            r"\b(?:\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b",  # noqa: E501
+            # API keys and tokens (common patterns)
+            r"\b[A-Za-z0-9]{32,}\b",
+            r"sk-[A-Za-z0-9]{32,}",
+            r"pk_[A-Za-z0-9]{32,}",
+            # UUIDs
+            r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b",  # noqa: E501
+        ]
+
+        for pattern in patterns:
+            if re.search(pattern, value):
+                return True
+
         return False
 
     def _redact_sensitive_data(self, data: Any) -> Any:
@@ -163,26 +182,32 @@ class SensitiveDataFilter:
             return data
         return self.filter_data(data)
 
-    def filter(self, record) -> "LogRecord":
+    def filter(self, record):
         """Filter a log record"""
         if not self.enabled:
             return record
-        
+
         # Get all attributes and filter them
         for attr_name in dir(record):
-            if not attr_name.startswith('_') and hasattr(record, attr_name):
+            if not attr_name.startswith("_") and hasattr(record, attr_name):
                 try:
                     value = getattr(record, attr_name)
                     if self._is_sensitive_field(attr_name):
                         setattr(record, attr_name, self.redaction_text)
-                    elif isinstance(value, str) and self._is_sensitive_value(value):
+                    elif isinstance(value, str) and self._is_sensitive_value(
+                        value
+                    ):
                         setattr(record, attr_name, self.redaction_text)
                     elif isinstance(value, (dict, list)):
-                        setattr(record, attr_name, self._redact_sensitive_data(value))
+                        setattr(
+                            record,
+                            attr_name,
+                            self._redact_sensitive_data(value),
+                        )
                 except (TypeError, AttributeError):
                     # Skip built-in attributes that can't be modified
                     pass
-        
+
         return record
 
     def contains_sensitive_pattern(self, value: str) -> bool:
@@ -198,11 +223,8 @@ class SensitiveDataFilter:
         if not isinstance(value, str):
             return False
 
-        for pattern in self.sensitive_patterns:
-            if pattern.search(value):
-                return True
-
-        return False
+        # Use the same logic as _is_sensitive_value
+        return self._is_sensitive_value(value)
 
     def redact_value(self, value: Any, partial: bool = False) -> Any:
         """
@@ -270,7 +292,7 @@ class SensitiveDataFilter:
         for key, value in data.items():
             if self._is_sensitive_field(key):
                 # Redact sensitive field
-                filtered[key] = self.redact_value(value, partial=True)
+                filtered[key] = self.redact_value(value, partial=False)
             elif isinstance(value, str) and self.contains_sensitive_pattern(
                 value
             ):
