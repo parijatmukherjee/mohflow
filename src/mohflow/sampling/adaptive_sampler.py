@@ -382,7 +382,7 @@ class AdaptiveSampler:
             hash_input = (
                 f"{level}:{message or ''}:{kwargs.get('component', '')}"
             )
-            hash_value = int(hashlib.md5(hash_input.encode()).hexdigest(), 16)
+            hash_value = int(hashlib.sha256(hash_input.encode()).hexdigest(), 16)
             return (hash_value % 10000) < (sample_rate * 10000)
 
         elif self.config.strategy == SamplingStrategy.ADAPTIVE:
