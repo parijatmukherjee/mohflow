@@ -80,7 +80,7 @@ def test_logger_creates_structured_output():
     # Logger should be created successfully and not raise errors
     logger.info("test message", user_id="123")
 
-    # 3. Refactor while keeping tests green (REFACTOR)
+    # Assert that the logger's service name is set correctly
     assert logger.config.SERVICE_NAME == "test"
 ```
 
