@@ -231,4 +231,6 @@ class TestClassifyField:
         # Should be very fast - less than 100ms for 1000 classifications
         # (allows for CI environment variability while maintaining performance)
         # Performance target: ~10μs per operation, allowing for CI overhead
-        assert median_time < 0.1, f"Performance test failed: median {median_time:.3f}s > 0.1s"
+        assert (
+            median_time < 0.1
+        ), f"Performance test failed: median {median_time:.3f}s > 0.1s"
