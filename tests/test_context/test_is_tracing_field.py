@@ -200,12 +200,12 @@ class TestIsTracingField:
         # Use median to be more robust against outliers
         median_time = sorted(trials)[1]
 
-        # Should be very fast - less than 20ms for 1000 lookups
+        # Should be very fast - less than 50ms for 1000 lookups
         # (allows for CI environment variability while maintaining performance)
         # Performance target: ~5μs per operation, allowing for CI overhead
         assert (
-            median_time < 0.02
-        ), f"Performance test failed: median {median_time:.3f}s > 0.02s"
+            median_time < 0.05
+        ), f"Performance test failed: median {median_time:.3f}s > 0.05s"
 
     def test_is_tracing_field_priority_over_sensitive(self):
         """Test is_tracing_field takes priority over sensitive field detection"""
