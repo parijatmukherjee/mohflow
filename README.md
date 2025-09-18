@@ -1,16 +1,107 @@
-# Mohflow
+# MohFlow - Structured Logging for Python
 
-![Mohflow_scocial](https://drive.google.com/uc?id=1Pv5-WQszaB76FS4lKoU8Ptq25JmX8365)
-
-Mohflow is a Python logging package that provides structured JSON logging with support for console output, file logging, and Grafana Loki integration. It's designed to be easy to use while providing powerful logging capabilities.
-
-## 🚀 MohFlow Released: **[Now on PyPI!](https://pypi.org/project/mohflow/)**
-
-## Status
-
-[![Build](https://github.com/parijatmukherjee/mohflow/actions/workflows/ci.yml/badge.svg)](https://github.com/parijatmukherjee/mohflow/actions/workflows/ci.yml)
+[![CI](https://github.com/parijatmukherjee/mohflow/actions/workflows/ci.yml/badge.svg)](https://github.com/parijatmukherjee/mohflow/actions/workflows/ci.yml)
+[![PyPI version](https://badge.fury.io/py/mohflow.svg)](https://badge.fury.io/py/mohflow)
+[![Python Support](https://img.shields.io/pypi/pyversions/mohflow.svg)](https://pypi.org/project/mohflow/)
 [![Code Quality](https://img.shields.io/badge/code%20quality-A+-brightgreen.svg)](https://github.com/parijatmukherjee/mohflow)
 [![Lint Compliance](https://img.shields.io/badge/lint%20compliance-100%25-green.svg)](https://github.com/parijatmukherjee/mohflow)
+
+**Python Versions**: 3.8, 3.9, 3.10, 3.11+
+
+MohFlow is a Python structured logging library (JSON-first) that targets console, files, and aggregators (e.g., Loki). It's designed to be easy to use while providing powerful logging capabilities for modern Python applications.
+
+## 🚀 Quickstart
+
+### Installation
+```bash
+pip install mohflow
+```
+
+### Basic Usage
+```python
+from mohflow import MohflowLogger
+
+# Create a logger instance
+logger = MohflowLogger(service_name="my-app")
+
+# Log structured data
+logger.info("User action completed", user_id="123", action="login", success=True)
+```
+
+**Output:**
+```json
+{
+  "timestamp": "2025-09-18T10:30:00.123456+00:00",
+  "level": "INFO",
+  "service": "my-app",
+  "message": "User action completed",
+  "user_id": "123",
+  "action": "login",
+  "success": true
+}
+```
+
+## 🔒 Quality Gates
+
+Before submitting any changes, ensure all quality gates pass locally:
+
+```bash
+make format    # Format code with black (must pass with zero errors)
+make lint      # Lint code with flake8 (must pass with zero errors)
+make test      # Run test suite with pytest (must pass all tests)
+```
+
+**Requirements:**
+- All commands must execute with **zero errors** before PR submission
+- GitHub Actions CI enforces the same standards
+- Quality gates are **non-negotiable** for code acceptance
+
+## 🧪 TDD Workflow
+
+MohFlow follows **Test-Driven Development** (TDD) for all new features:
+
+### 3-Step Process:
+1. **Write failing test** → Create test that validates expected behavior
+2. **Implement minimal code** → Write just enough code to make test pass
+3. **Refactor** → Improve code while keeping tests green
+
+### Example TDD Cycle:
+```python
+# tests/test_example.py
+import pytest
+from mohflow import MohflowLogger
+
+def test_logger_creates_structured_output():
+    """Test that logger produces JSON-structured output."""
+    # 1. Write failing test (RED)
+    logger = MohflowLogger(service_name="test")
+
+    # 2. Implement feature to make test pass (GREEN)
+    # Logger should be created successfully and not raise errors
+    logger.info("test message", user_id="123")
+
+    # 3. Refactor while keeping tests green (REFACTOR)
+    assert logger.config.SERVICE_NAME == "test"
+```
+
+Run tests: `pytest tests/`
+
+## 📋 Spec-Kit Workflow
+
+For structured feature development, use the spec-kit process:
+
+- **`/specify`** → Create feature specification with requirements and user stories
+- **`/plan`** → Generate implementation plan with technical design and tasks
+- **`/tasks`** → Create numbered, actionable tasks for implementation
+
+**Example:**
+```bash
+/specify "Add user authentication to logging context"
+/plan "Based on specification, create technical design"
+/tasks "Generate specific implementation steps"
+```
+
+New specifications go in the `specs/` directory.
 
 ## Features
 

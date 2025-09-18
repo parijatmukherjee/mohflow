@@ -51,17 +51,22 @@ Logs should be easy to integrate with downstream tools (Grafana Loki, ELK, etc.)
 Include metadata like timestamp, level, source, and context in every log event.  
 
 ### XI. Quality Gates (NON-NEGOTIABLE)
-- **CI Validation**: All code must pass the GitHub Actions workflow before merging.  
-- **Formatting & Linting**: The following commands must run with **zero errors** before any commit is accepted:  
+- **CI Validation**: All code must pass the GitHub Actions workflow before merging.
+- **Formatting & Linting**: The following commands must run with **zero errors** before any commit is accepted:
   ```bash
   make format
   make lint
   ```
+- **Flake8 Configuration**: All linting rules are defined in `.flake8` and enforced consistently in CI.
+- **Local Development**: Contributors must run quality gates locally before submitting PRs.
+- **Zero Tolerance**: No code with formatting or linting violations will be accepted.
+
 ### XII. Final Checks
 - Before communicating a feature as COMPLETE, the following must be run locally and in CI:
-```
-make test
-```
+  ```bash
+  make test
+  ```
 - All tests must pass successfully.
 - A feature is not considered finished until both local and CI tests are green.
+- **Definition of COMPLETE**: A feature meets all acceptance criteria, passes all quality gates, and has been validated through the full test suite.
   
