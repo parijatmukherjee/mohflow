@@ -34,7 +34,9 @@ Consider async, buffering, or batching where appropriate.
 
 ### VII. Documentation as a Feature
 Every public function and class must have docstrings and usage examples.  
-README and CHANGELOG must be updated when APIs evolve.  
+README and CHANGELOG must be updated when APIs evolve. 
+
+If it is about releasing a new version of Mohflow, the release notes should properly credit all contributors of the PRs that were included.
 
 ### VIII. Semantic Versioning
 Follow SemVer strictly.  
