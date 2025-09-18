@@ -243,7 +243,9 @@ class TestEnhancedFilterData:
         end_time = time.time()
 
         # Should complete within reasonable time (allow generous threshold for CI)
-        assert (end_time - start_time) < 0.5  # Less than 500ms (generous for CI)
+        assert (
+            end_time - start_time
+        ) < 0.5  # Less than 500ms (generous for CI)
 
         # Should have processed and classified special fields
         # Expected: ~100 trace_id fields preserved + ~67 api_key fields redacted
