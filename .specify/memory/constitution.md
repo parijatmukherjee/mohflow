@@ -10,10 +10,14 @@ Free-form strings are discouraged unless under a `message` field.
 Keep the library lightweight. Only standard library + well-justified, small dependencies are allowed.  
 Every dependency must be evaluated for long-term stability, licensing, and security.  
 
-### III. Test-First (NON-NEGOTIABLE)
-Every feature or bugfix must include automated tests.  
-Unit tests cover all log levels, outputs, and failure scenarios.  
-No PR is merged without passing tests.  
+### III. Test-First & TDD (NON-NEGOTIABLE)
+- Every feature or bugfix must include automated tests.  
+- **All new features must follow a Test-Driven Development (TDD) approach**:  
+  1. Write failing tests first.  
+  2. Implement the minimal code to pass the test.  
+  3. Refactor while keeping tests green.  
+- Unit tests must cover all log levels, outputs, and failure scenarios.  
+- No PR is merged without passing tests.  
 
 ### IV. Configurability by Design
 Users should be able to configure outputs (console, files, Loki), log levels, and contexts via clear APIs.  
@@ -52,3 +56,12 @@ Include metadata like timestamp, level, source, and context in every log event.
   ```bash
   make format
   make lint
+  ```
+### XII. Final Checks
+- Before communicating a feature as COMPLETE, the following must be run locally and in CI:
+```
+make test
+```
+- All tests must pass successfully.
+- A feature is not considered finished until both local and CI tests are green.
+  

@@ -228,6 +228,30 @@ class SecurityConfig:
     REDACTION_PLACEHOLDER: str = "[REDACTED]"
     MAX_FIELD_LENGTH: int = 1000  # Maximum length before truncation
 
+    # Tracing field exemptions (T020, T021)
+    DEFAULT_TRACING_FIELDS: Tuple[str, ...] = (
+        "correlation_id",
+        "request_id",
+        "trace_id",
+        "span_id",
+        "transaction_id",
+        "session_id",
+        "operation_id",
+        "parent_id",
+        "root_id",
+        "trace_context",
+    )
+
+    DEFAULT_TRACING_PATTERNS: Tuple[str, ...] = (
+        r"^trace_.*",  # trace_*
+        r"^span_.*",  # span_*
+        r"^request_.*",  # request_*
+        r"^correlation_.*",  # correlation_*
+        r".*_trace_id$",  # *_trace_id
+        r".*_span_id$",  # *_span_id
+        r".*_request_id$",  # *_request_id
+    )
+
     # Headers to sanitize
     SENSITIVE_HEADERS: Tuple[str, ...] = (
         "authorization",

@@ -112,7 +112,8 @@ class TestSensitiveDataFilter:
         assert redacted["user"]["password"] == "[REDACTED]"
         assert redacted["user"]["profile"]["email"] == "[REDACTED]"
         assert redacted["user"]["profile"]["age"] == 30
-        assert redacted["auth"]["token"] == "[REDACTED]"
+        # "auth" is a sensitive field name, so entire field is redacted
+        assert redacted["auth"] == "[REDACTED]"
 
     def test_redact_sensitive_data_list(self):
         """Test redacting sensitive data from list."""
