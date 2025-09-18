@@ -95,7 +95,8 @@ For structured feature development, use the spec-kit process:
 - **`/tasks`** → Create numbered, actionable tasks for implementation
 
 **Example:**
-```bash
+```text
+# Conceptual workflow steps (not shell commands):
 /specify "Add user authentication to logging context"
 /plan "Based on specification, create technical design"
 /tasks "Generate specific implementation steps"
