@@ -53,6 +53,10 @@ jobs:
       run: |
         flake8 src tests
 
+    - name: Debug basic functionality
+      run: |
+        python test_ci_debug.py
+
     - name: Run tests with pytest
       run: |
         if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.run_coverage }}" = "false" ]; then
