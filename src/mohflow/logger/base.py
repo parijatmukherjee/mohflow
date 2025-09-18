@@ -66,6 +66,8 @@ class MohflowLogger(ContextualLogger):
         enable_auto_config: bool = False,
         enable_context_enrichment: bool = True,
         enable_sensitive_data_filter: bool = True,
+        exclude_tracing_fields: bool = True,
+        custom_safe_fields: Optional[set] = None,
         formatter_type: FormatterType = "structured",
         async_handlers: bool = False,
         # Privacy and PII protection parameters
@@ -149,7 +151,10 @@ class MohflowLogger(ContextualLogger):
             )
 
         if enable_sensitive_data_filter:
-            self.sensitive_filter = SensitiveDataFilter()
+            self.sensitive_filter = SensitiveDataFilter(
+                exclude_tracing_fields=exclude_tracing_fields,
+                custom_safe_fields=custom_safe_fields,
+            )
 
         # Initialize OpenTelemetry enricher
         if self.enable_otel:
