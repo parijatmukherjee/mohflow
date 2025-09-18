@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
     "python-logging-loki>=0.3.1",
@@ -73,7 +74,7 @@ addopts = "-v -p no:warnings"
 
 [tool.black]
 line-length = 79
-target-version = ['py38']
+target-version = ['py38', 'py39', 'py310', 'py311']
 include = '\.pyi?$'
 
 [tool.mypy]
