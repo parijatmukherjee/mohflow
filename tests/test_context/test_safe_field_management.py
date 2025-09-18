@@ -174,7 +174,7 @@ class TestSafeFieldManagement:
             "correlation_id": "built_in_preserved",
         }
 
-        result = filter_obj.filter_data(test_data)
+        result = filter_obj.filter_data_with_audit(test_data)
 
         # Safe field should remain preserved after filtering
         assert "persistent_field" in result.preserved_fields

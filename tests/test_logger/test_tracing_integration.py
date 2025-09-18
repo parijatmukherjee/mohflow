@@ -74,10 +74,12 @@ class TestTracingIntegration:
             log_level="INFO",
         )
 
-        # Add custom handler to capture output
+        # Add custom handler to capture output with JSON formatter
         import logging
+        from mohflow.formatters import StructuredFormatter
 
         handler = logging.StreamHandler(log_capture)
+        handler.setFormatter(StructuredFormatter())
         logger.logger.addHandler(handler)
 
         # Log message with mixed sensitive and tracing data

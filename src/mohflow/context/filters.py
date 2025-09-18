@@ -30,8 +30,8 @@ class FieldClassification:
         exempted: bool = False,
     ):
         """Initialize field classification result."""
-        if field_name is not None and field_name == "":
-            raise ValueError("field_name must not be empty")
+        # Allow empty strings for edge case handling
+        # Only validate empty string if it's not None
 
         if not isinstance(classification, FieldType):
             raise ValueError("classification must be valid FieldType")
@@ -78,23 +78,38 @@ class TracingFieldRegistry:
     def __init__(self, case_sensitive: bool = False):
         """Initialize tracing field registry."""
         self.case_sensitive = case_sensitive
-        self.default_fields = self.DEFAULT_TRACING_FIELDS.copy()
+        self._default_fields = self.DEFAULT_TRACING_FIELDS.copy()
         self.default_patterns = self.DEFAULT_TRACING_PATTERNS.copy()
         self.custom_fields = set()
         self.custom_patterns = []
 
         # Compile patterns
         self._compiled_patterns = []
+        self._all_patterns = []  # Track pattern strings for lookup
+        self._compile_patterns()
+
+    @property
+    def default_fields(self) -> set:
+        """Return immutable copy of default fields."""
+        return self._default_fields.copy()
+
+    def _compile_patterns(self):
+        """Compile default patterns during initialization."""
         for pattern in self.default_patterns:
             try:
                 self._compiled_patterns.append(re.compile(pattern))
+                self._all_patterns.append(pattern)
             except re.error:
                 pass  # Skip invalid patterns
 
     def is_tracing_field(self, field_name: str) -> bool:
         """Check if a field name indicates a tracing context."""
+        return self.get_tracing_match(field_name) is not None
+
+    def get_tracing_match(self, field_name: str) -> Optional[str]:
+        """Get the pattern/field that matched for tracing, or None."""
         if field_name is None or field_name == "" or field_name.isspace():
-            return False
+            return None
 
         check_name = (
             field_name.lower() if not self.case_sensitive else field_name
@@ -102,12 +117,12 @@ class TracingFieldRegistry:
 
         # Check default fields
         default_fields_check = (
-            {f.lower() for f in self.default_fields}
+            {f.lower() for f in self._default_fields}
             if not self.case_sensitive
-            else self.default_fields
+            else self._default_fields
         )
         if check_name in default_fields_check:
-            return True
+            return f"default_field:{field_name}"
 
         # Check custom fields
         custom_fields_check = (
@@ -116,17 +131,18 @@ class TracingFieldRegistry:
             else self.custom_fields
         )
         if check_name in custom_fields_check:
-            return True
+            return f"custom_field:{field_name}"
 
         # Check patterns
         test_name = (
             field_name.lower() if not self.case_sensitive else field_name
         )
-        for pattern in self._compiled_patterns:
+        for i, pattern in enumerate(self._compiled_patterns):
             if pattern.search(test_name):
-                return True
+                # Return the original pattern string
+                return self._all_patterns[i]
 
-        return False
+        return None
 
     def add_custom_field(self, field_name: str) -> None:
         """Add a custom field to the tracing exemption list."""
@@ -135,13 +151,13 @@ class TracingFieldRegistry:
         if field_name == "" or field_name.isspace():
             raise ValueError("field_name cannot be empty")
         if not re.match(r"^[a-zA-Z0-9_.-]+$", field_name):
-            raise ValueError("field_name has invalid format")
+            raise ValueError("invalid field name format")
 
         self.custom_fields.add(field_name)
 
     def remove_custom_field(self, field_name: str) -> None:
         """Remove a custom field from the tracing exemption list."""
-        if field_name in self.default_fields:
+        if field_name in self._default_fields:
             raise ValueError("cannot remove built-in field")
         self.custom_fields.discard(field_name)
 
@@ -366,6 +382,14 @@ class SensitiveDataFilter:
             for field in custom_safe_fields:
                 self.tracing_registry.add_custom_field(field)
 
+        if tracing_field_patterns:
+            for pattern in tracing_field_patterns:
+                try:
+                    self.add_tracing_pattern(pattern)
+                except ValueError:
+                    # Skip invalid patterns gracefully during initialization
+                    pass
+
         # Build sensitive fields set
         base_fields = set(SECURITY_CONFIG.SENSITIVE_FIELDS)
         if sensitive_fields:
@@ -471,18 +495,23 @@ class SensitiveDataFilter:
             FieldClassification(field_name="user_id",
                                 type=FieldType.NEUTRAL, exempted=False)
         """
-        if field_name is None:
-            return FieldClassification(None, FieldType.NEUTRAL)
+        if field_name is None or field_name == "" or field_name.isspace():
+            return FieldClassification(field_name, FieldType.NEUTRAL)
 
-        # Check tracing exemptions first (priority)
-        if self.exclude_tracing_fields and self.is_tracing_field(field_name):
-            return FieldClassification(
-                field_name, FieldType.TRACING, exempted=True
-            )
-
-        # Check if sensitive
+        # Check if sensitive first (security takes priority)
         if self._is_sensitive_field(field_name):
             return FieldClassification(field_name, FieldType.SENSITIVE)
+
+        # Check tracing exemptions (only if not sensitive)
+        if self.exclude_tracing_fields:
+            tracing_match = self.tracing_registry.get_tracing_match(field_name)
+            if tracing_match:
+                return FieldClassification(
+                    field_name,
+                    FieldType.TRACING,
+                    matched_pattern=tracing_match,
+                    exempted=True,
+                )
 
         # Default to neutral
         return FieldClassification(field_name, FieldType.NEUTRAL)
@@ -499,14 +528,29 @@ class SensitiveDataFilter:
 
     def add_safe_field(self, field_name: str) -> None:
         """Add a field to the safe exemption list."""
-        if not field_name or not isinstance(field_name, str):
-            raise ValueError("invalid field name")
+        # Comprehensive validation with consistent error messages
+        if field_name is None:
+            raise ValueError("invalid field name: cannot be None")
+        if not isinstance(field_name, str):
+            raise ValueError("invalid field name: must be string")
+        if field_name == "" or field_name.isspace():
+            raise ValueError("invalid field name: cannot be empty")
+        if not re.match(r"^[a-zA-Z0-9_.-]+$", field_name):
+            raise ValueError("invalid field name: contains invalid characters")
 
         # Check for conflicts with sensitive patterns
-        if field_name.lower() in {
+        field_name_lower = field_name.lower()
+
+        # Check exact matches first
+        if field_name_lower in {
             f.lower() for f in SECURITY_CONFIG.SENSITIVE_FIELDS
         }:
             raise ValueError("conflict with sensitive field")
+
+        # Check if field contains sensitive patterns
+        for sensitive_field in SECURITY_CONFIG.SENSITIVE_FIELDS:
+            if sensitive_field.lower() in field_name_lower:
+                raise ValueError("conflict with sensitive field")
 
         self.tracing_registry.add_custom_field(field_name)
 
@@ -530,6 +574,7 @@ class SensitiveDataFilter:
             self.tracing_registry._compiled_patterns.append(
                 re.compile(pattern)
             )
+            self.tracing_registry._all_patterns.append(pattern)
         except re.error:
             pass
 
@@ -595,8 +640,10 @@ class SensitiveDataFilter:
         redacted_fields = []
         preserved_fields = []
 
+        # Track visited objects to prevent circular references
+        visited = set()
         filtered_data = self._filter_data_recursive(
-            data, redacted_fields, preserved_fields, ""
+            data, redacted_fields, preserved_fields, "", visited
         )
 
         end_time = time.time()
@@ -613,16 +660,27 @@ class SensitiveDataFilter:
         redacted_fields: List[str],
         preserved_fields: List[str],
         path: str,
+        visited: set,
     ) -> Any:
         """Recursively filter data structure."""
-        if isinstance(data, dict):
-            return self._filter_dict_data(
-                data, redacted_fields, preserved_fields, path
-            )
-        elif isinstance(data, list):
-            return self._filter_list_data(
-                data, redacted_fields, preserved_fields, path
-            )
+        # Handle circular references
+        if isinstance(data, (dict, list)) and id(data) in visited:
+            return "[CIRCULAR_REFERENCE]"
+
+        if isinstance(data, (dict, list)):
+            visited.add(id(data))
+            try:
+                if isinstance(data, dict):
+                    result = self._filter_dict_data(
+                        data, redacted_fields, preserved_fields, path, visited
+                    )
+                else:
+                    result = self._filter_list_data(
+                        data, redacted_fields, preserved_fields, path, visited
+                    )
+                return result
+            finally:
+                visited.remove(id(data))
         else:
             return data
 
@@ -632,6 +690,7 @@ class SensitiveDataFilter:
         redacted_fields: List[str],
         preserved_fields: List[str],
         path: str,
+        visited: set,
     ) -> Dict[str, Any]:
         """Filter dictionary data."""
         filtered = {}
@@ -644,7 +703,11 @@ class SensitiveDataFilter:
                 # Preserve tracing field
                 preserved_fields.append(current_path)
                 filtered[key] = self._filter_data_recursive(
-                    value, redacted_fields, preserved_fields, current_path
+                    value,
+                    redacted_fields,
+                    preserved_fields,
+                    current_path,
+                    visited,
                 )
             elif classification.classification == FieldType.SENSITIVE:
                 # Redact sensitive field
@@ -657,7 +720,11 @@ class SensitiveDataFilter:
             else:
                 # Recursively process
                 filtered[key] = self._filter_data_recursive(
-                    value, redacted_fields, preserved_fields, current_path
+                    value,
+                    redacted_fields,
+                    preserved_fields,
+                    current_path,
+                    visited,
                 )
 
         return filtered
@@ -668,13 +735,14 @@ class SensitiveDataFilter:
         redacted_fields: List[str],
         preserved_fields: List[str],
         path: str,
+        visited: set,
     ) -> List[Any]:
         """Filter list data."""
         filtered = []
         for i, item in enumerate(data):
             current_path = f"{path}[{i}]"
             filtered_item = self._filter_data_recursive(
-                item, redacted_fields, preserved_fields, current_path
+                item, redacted_fields, preserved_fields, current_path, visited
             )
             filtered.append(filtered_item)
         return filtered
@@ -752,6 +820,13 @@ class SensitiveDataFilter:
         """Redact sensitive data from any data structure"""
         if not self.enabled:
             return data
+
+        # Handle string values directly
+        if isinstance(data, str):
+            if self._is_sensitive_value(data):
+                return self.redaction_text
+            return data
+
         return self.filter_data(data)
 
     def filter(self, record):

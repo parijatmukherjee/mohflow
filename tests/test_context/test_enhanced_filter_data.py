@@ -176,19 +176,19 @@ class TestEnhancedFilterData:
         filter_obj = SensitiveDataFilter()
 
         # None input
-        result_none = filter_obj.filter_data(None)
+        result_none = filter_obj.filter_data_with_audit(None)
         assert result_none.filtered_data is None
         assert result_none.redacted_fields == []
         assert result_none.preserved_fields == []
 
         # Empty dict
-        result_empty = filter_obj.filter_data({})
+        result_empty = filter_obj.filter_data_with_audit({})
         assert result_empty.filtered_data == {}
         assert result_empty.redacted_fields == []
         assert result_empty.preserved_fields == []
 
         # Empty list
-        result_list = filter_obj.filter_data([])
+        result_list = filter_obj.filter_data_with_audit([])
         assert result_list.filtered_data == []
 
     def test_filter_data_complex_data_types(self):
@@ -271,7 +271,7 @@ class TestEnhancedFilterData:
         data_b["ref"] = data_a
 
         # Should not crash with circular reference
-        result = filter_obj.filter_data(data_a)
+        result = filter_obj.filter_data_with_audit(data_a)
 
         # Should have processed the data (may truncate circular parts)
         assert isinstance(result, FilterResult)

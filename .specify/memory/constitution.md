@@ -57,4 +57,11 @@ Include metadata like timestamp, level, source, and context in every log event.
   make format
   make lint
   ```
+### XII. Final Checks
+- Before communicating a feature as COMPLETE, the following must be run locally and in CI:
+```
+make test
+```
+- All tests must pass successfully.
+- A feature is not considered finished until both local and CI tests are green.
   

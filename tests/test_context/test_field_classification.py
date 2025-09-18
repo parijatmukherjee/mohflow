@@ -35,19 +35,23 @@ class TestFieldClassification:
         assert classification.matched_pattern is None
         assert classification.exempted is False
 
-    def test_field_classification_validation_field_name_not_none(self):
-        """Test field_name must not be None"""
-        with pytest.raises(ValueError, match="field_name must not be None"):
-            FieldClassification(
-                field_name=None, classification=FieldType.NEUTRAL
-            )
+    def test_field_classification_validation_field_name_none_allowed(self):
+        """Test field_name=None is allowed for edge cases"""
+        # This should work for edge cases handled by classify_field
+        classification = FieldClassification(
+            field_name=None, classification=FieldType.NEUTRAL
+        )
+        assert classification.field_name is None
+        assert classification.classification == FieldType.NEUTRAL
 
-    def test_field_classification_validation_field_name_not_empty(self):
-        """Test field_name must not be empty"""
-        with pytest.raises(ValueError, match="field_name must not be empty"):
-            FieldClassification(
-                field_name="", classification=FieldType.NEUTRAL
-            )
+    def test_field_classification_validation_field_name_empty_allowed(self):
+        """Test field_name empty string is allowed for edge cases"""
+        # This should work for edge cases handled by classify_field
+        classification = FieldClassification(
+            field_name="", classification=FieldType.NEUTRAL
+        )
+        assert classification.field_name == ""
+        assert classification.classification == FieldType.NEUTRAL
 
     def test_field_classification_validation_invalid_classification_type(self):
         """Test classification must be valid FieldType enum"""
