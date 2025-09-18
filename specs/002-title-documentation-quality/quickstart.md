@@ -83,9 +83,9 @@ def test_logger_creates_structured_output():
     logger = MohflowLogger(service_name="test")
 
     # This test demonstrates the TDD cycle:
-    # 1. Write failing test (red)
-    # 2. Implement minimal code (green)
-    # 3. Refactor while keeping tests green
+    # TDD step 1: Write a failing test (red)
+    # TDD step 2: Implement minimal code to pass (green)
+    # TDD step 3: Refactor while keeping tests green
 
     result = logger.info("test message", user_id="123")
     assert result is not None  # Minimal assertion to start
