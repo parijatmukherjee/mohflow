@@ -22,6 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TECHNICAL_PLAN.md (outdated technical plan conflicting with current structure)
 - benchmarks/README.md (specialized documentation not essential for core contributor workflow)
 
+## [1.1.1] - 2025-09-18
+
+### Added
+- Workflow scaffolding and automation for feature planning & task generation (PR #25)
+- Enhanced Sensitive Data Filter with tracing field exemptions: keeps correlation_id, request_id, trace_id while redacting sensitive data; comprehensive TDD coverage (PR #26)
+
+### Changed
+- Docs aligned with Constitution: TDD, Spec-Kit flow, Quality Gates (format/lint/test)
+- CI cleanup: remove obsolete debug test step (from PR #26 follow-ups)
+
 ## [1.1.0] - 2025-09-18
 
 ### Added

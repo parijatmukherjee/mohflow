@@ -311,6 +311,65 @@ logger.add_sensitive_field("internal_id")
 logger.info("Processing", internal_id="12345")  # [REDACTED]
 ```
 
+### Tracing Field Exemptions
+
+MohFlow v1.1.1+ automatically preserves distributed tracing fields while redacting sensitive data:
+
+```python
+# Tracing fields are preserved during sensitive data filtering
+logger.info("Processing payment request",
+    correlation_id="req-abc-123",      # ✅ Preserved (tracing)
+    request_id="req-456",              # ✅ Preserved (tracing)
+    trace_id="trace-789",              # ✅ Preserved (tracing)
+    span_id="span-101112",             # ✅ Preserved (tracing)
+    user_id="user-789",                # ✅ Untouched (neutral)
+    api_key="sk-secret123",            # ❌ [REDACTED] (sensitive)
+    credit_card="4111-1111-1111-1111"  # ❌ [REDACTED] (sensitive)
+)
+```
+
+**Output with tracing preservation:**
+```json
+{
+  "timestamp": "2025-09-18T10:30:00.123456+00:00",
+  "level": "INFO",
+  "service": "payment-service",
+  "message": "Processing payment request",
+  "correlation_id": "req-abc-123",
+  "request_id": "req-456",
+  "trace_id": "trace-789",
+  "span_id": "span-101112",
+  "user_id": "user-789",
+  "api_key": "[REDACTED]",
+  "credit_card": "[REDACTED]"
+}
+```
+
+**Default preserved tracing fields:**
+- `correlation_id`, `request_id`, `trace_id`, `span_id`
+- `transaction_id`, `session_id`, `operation_id`
+- `parent_id`, `root_id`, `trace_context`
+- Pattern-based: `trace_*`, `span_*`
+
+**Custom tracing patterns:**
+```python
+from mohflow.context.filters import SensitiveDataFilter
+
+# Add custom tracing field patterns
+filter_obj = SensitiveDataFilter(
+    exclude_tracing_fields=True,
+    tracing_field_patterns=[r"^x_trace_.*", r".*_correlation_.*"]
+)
+
+# Custom patterns will preserve fields like:
+# x_trace_id, request_correlation_key, etc.
+logger.info("Custom tracing",
+    x_trace_custom="trace-123",        # ✅ Preserved (custom pattern)
+    req_correlation_key="corr-456",    # ✅ Preserved (custom pattern)
+    password="secret"                  # ❌ [REDACTED] (sensitive)
+)
+```
+
 ### Auto-Configuration with Environment Detection
 
 Automatically configure logging based on your deployment environment:
