@@ -82,7 +82,6 @@ def test_logger_creates_structured_output():
     """Test that logger produces JSON-structured output."""
     logger = MohflowLogger(service_name="test")
 
-    # This test demonstrates the TDD cycle:
     # TDD step 1: Write a failing test (red)
     # TDD step 2: Implement minimal code to pass (green)
     # TDD step 3: Refactor while keeping tests green
@@ -99,14 +98,10 @@ def test_logger_creates_structured_output():
 3. **`/tasks`**: Create numbered, actionable tasks for implementation
 
 ### Example Usage
-```bash
-# Start new feature
+```text
+# Conceptual workflow steps (not shell commands):
 /specify "Add user authentication to logging context"
-
-# Generate implementation plan
 /plan "Based on specification, create technical design"
-
-# Create task list
 /tasks "Generate specific implementation steps"
 ```
 
