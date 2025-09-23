@@ -11,6 +11,7 @@ import time
 import pytest
 from pathlib import Path
 
+
 @pytest.mark.asyncio
 async def test_event_cache():
     """Test log event caching functionality."""
