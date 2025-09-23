@@ -1,0 +1,337 @@
+"""
+Browser automation test for Mohnitor UI.
+
+This test verifies that:
+1. The Mohnitor UI loads properly in a browser
+2. Logs appear in real-time
+3. Filtering and search functionality works
+4. WebSocket connection is established
+"""
+
+import pytest
+import time
+import threading
+import subprocess
+import sys
+from pathlib import Path
+
+try:
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.chrome.service import Service
+    from selenium.common.exceptions import TimeoutException, WebDriverException
+    selenium_available = True
+except ImportError:
+    selenium_available = False
+
+from .test_app import TestLogGenerator
+
+
+@pytest.mark.skipif(not selenium_available, reason="selenium not available")
+class TestMohnitorBrowserUI:
+    """Browser automation tests for Mohnitor UI."""
+
+    @classmethod
+    def setup_class(cls):
+        """Set up the test environment."""
+        cls.log_generator = None
+        cls.driver = None
+        cls.hub_url = "http://127.0.0.1:17361"
+
+    @classmethod
+    def teardown_class(cls):
+        """Clean up test environment."""
+        if cls.log_generator:
+            cls.log_generator.stop()
+        if cls.driver:
+            cls.driver.quit()
+
+    def setup_method(self):
+        """Set up each test method."""
+        # Start log generator
+        self.log_generator = TestLogGenerator("browser-test-app")
+        self.log_generator.start()
+
+        # Set up Chrome driver
+        try:
+            options = Options()
+            options.add_argument("--headless")  # Run in headless mode
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--window-size=1920,1080")
+
+            # Try to use Chrome driver
+            self.driver = webdriver.Chrome(options=options)
+            self.driver.implicitly_wait(10)
+
+        except WebDriverException as e:
+            pytest.skip(f"Chrome driver not available: {e}")
+
+    def teardown_method(self):
+        """Clean up each test method."""
+        if self.log_generator:
+            self.log_generator.stop()
+        if self.driver:
+            self.driver.quit()
+
+    def test_ui_loads_successfully(self):
+        """Test that the Mohnitor UI loads successfully."""
+        # Navigate to the UI
+        self.driver.get(self.hub_url)
+
+        # Wait for page to load
+        wait = WebDriverWait(self.driver, 10)
+
+        # Check page title
+        assert "Mohnitor" in self.driver.title
+
+        # Check main container exists
+        main_container = wait.until(
+            EC.presence_of_element_located((By.CLASS_NAME, "container"))
+        )
+        assert main_container is not None
+
+        # Check header exists
+        header = wait.until(
+            EC.presence_of_element_located((By.TAG_NAME, "h1"))
+        )
+        assert "Mohnitor" in header.text
+
+    def test_logs_appear_in_ui(self):
+        """Test that logs appear in the UI."""
+        # Navigate to the UI
+        self.driver.get(self.hub_url)
+
+        wait = WebDriverWait(self.driver, 15)
+
+        # Generate some test logs
+        self.log_generator.generate_test_scenarios()
+
+        # Wait for logs container
+        logs_container = wait.until(
+            EC.presence_of_element_located((By.ID, "logs"))
+        )
+
+        # Wait for logs to appear
+        time.sleep(2)
+
+        # Check that log entries exist
+        log_entries = self.driver.find_elements(By.CLASS_NAME, "log-entry")
+        assert len(log_entries) > 0, "No log entries found in UI"
+
+        # Check that different log levels are displayed
+        log_texts = [entry.text for entry in log_entries]
+        log_content = " ".join(log_texts)
+
+        # Should contain our test scenario logs
+        assert "authentication" in log_content.lower() or "user" in log_content.lower()
+
+    def test_websocket_connection_established(self):
+        """Test that WebSocket connection is established."""
+        # Navigate to the UI
+        self.driver.get(self.hub_url)
+
+        wait = WebDriverWait(self.driver, 10)
+
+        # Wait for connection status indicator
+        try:
+            connection_status = wait.until(
+                EC.presence_of_element_located((By.ID, "connection-status"))
+            )
+
+            # Should show connected status
+            status_text = connection_status.text.lower()
+            assert "connected" in status_text or "online" in status_text
+
+        except TimeoutException:
+            # If no explicit status indicator, check that logs are updating
+            # which implies WebSocket is working
+            initial_log_count = len(self.driver.find_elements(By.CLASS_NAME, "log-entry"))
+
+            # Wait for new logs
+            time.sleep(3)
+
+            final_log_count = len(self.driver.find_elements(By.CLASS_NAME, "log-entry"))
+            assert final_log_count > initial_log_count, "Logs not updating - WebSocket may not be connected"
+
+    def test_log_filtering_works(self):
+        """Test that log filtering functionality works."""
+        # Navigate to the UI
+        self.driver.get(self.hub_url)
+
+        wait = WebDriverWait(self.driver, 10)
+
+        # Generate diverse logs
+        self.log_generator.generate_test_scenarios()
+        time.sleep(2)
+
+        # Look for filter controls
+        try:
+            # Try to find log level filter
+            level_filter = self.driver.find_element(By.ID, "level-filter")
+            if level_filter:
+                # Test filtering by ERROR level
+                level_filter.click()
+                error_option = wait.until(
+                    EC.element_to_be_clickable((By.XPATH, "//option[@value='ERROR']"))
+                )
+                error_option.click()
+
+                time.sleep(1)
+
+                # Check that only error logs are shown
+                visible_logs = self.driver.find_elements(By.CLASS_NAME, "log-entry")
+                for log in visible_logs:
+                    log_text = log.text.lower()
+                    assert "error" in log_text or "failed" in log_text
+
+        except:
+            # If specific filter controls not found, try search functionality
+            try:
+                search_input = self.driver.find_element(By.ID, "search-input")
+                search_input.clear()
+                search_input.send_keys("authentication")
+
+                time.sleep(1)
+
+                # Check that filtered results contain the search term
+                visible_logs = self.driver.find_elements(By.CLASS_NAME, "log-entry")
+                if visible_logs:
+                    for log in visible_logs:
+                        assert "authentication" in log.text.lower()
+
+            except:
+                pytest.skip("No filtering controls found in UI")
+
+    def test_real_time_log_updates(self):
+        """Test that logs update in real-time."""
+        # Navigate to the UI
+        self.driver.get(self.hub_url)
+
+        wait = WebDriverWait(self.driver, 10)
+
+        # Wait for initial logs
+        time.sleep(2)
+        initial_log_count = len(self.driver.find_elements(By.CLASS_NAME, "log-entry"))
+
+        # Wait for continuous log generation
+        time.sleep(3)
+
+        # Check that new logs appeared
+        final_log_count = len(self.driver.find_elements(By.CLASS_NAME, "log-entry"))
+        assert final_log_count > initial_log_count, "Logs are not updating in real-time"
+
+        # Verify timestamp progression
+        log_entries = self.driver.find_elements(By.CLASS_NAME, "log-entry")
+        if len(log_entries) >= 2:
+            # Get timestamps from first and last logs
+            first_log = log_entries[0].text
+            last_log = log_entries[-1].text
+
+            # Basic check that logs have different content (implying different times)
+            assert first_log != last_log, "Logs appear to be duplicated"
+
+    def test_ui_handles_high_log_volume(self):
+        """Test that UI can handle high volume of logs."""
+        # Navigate to the UI
+        self.driver.get(self.hub_url)
+
+        # Let logs accumulate for a while
+        time.sleep(5)
+
+        # Check that UI is still responsive
+        log_entries = self.driver.find_elements(By.CLASS_NAME, "log-entry")
+        assert len(log_entries) > 10, "Not enough logs generated for volume test"
+
+        # Try to interact with the UI
+        try:
+            # Scroll to check UI responsiveness
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(0.5)
+            self.driver.execute_script("window.scrollTo(0, 0);")
+
+            # UI should still be responsive
+            page_title = self.driver.title
+            assert "Mohnitor" in page_title
+
+        except Exception as e:
+            pytest.fail(f"UI became unresponsive under load: {e}")
+
+    def test_error_scenarios_display_correctly(self):
+        """Test that error scenarios are displayed with proper styling."""
+        # Navigate to the UI
+        self.driver.get(self.hub_url)
+
+        # Generate error scenarios
+        self.log_generator.logger.error("Critical system failure",
+                                      component="database",
+                                      trace_id="error-test")
+        self.log_generator.logger.warning("Memory usage high",
+                                        usage="95%",
+                                        trace_id="warning-test")
+
+        time.sleep(2)
+
+        # Look for error styling
+        log_entries = self.driver.find_elements(By.CLASS_NAME, "log-entry")
+
+        error_found = False
+        warning_found = False
+
+        for entry in log_entries:
+            entry_text = entry.text.lower()
+            if "critical system failure" in entry_text:
+                error_found = True
+                # Check if error styling is applied
+                entry_classes = entry.get_attribute("class")
+                assert "error" in entry_classes.lower() or "danger" in entry_classes.lower()
+
+            if "memory usage high" in entry_text:
+                warning_found = True
+                # Check if warning styling is applied
+                entry_classes = entry.get_attribute("class")
+                assert "warning" in entry_classes.lower() or "warn" in entry_classes.lower()
+
+        assert error_found, "Error log not found in UI"
+        assert warning_found, "Warning log not found in UI"
+
+
+# Standalone test runner for manual testing
+if __name__ == "__main__":
+    # Check if selenium is available
+    if not selenium_available:
+        print("Selenium not available. Install with: pip install selenium")
+        sys.exit(1)
+
+    print("Running browser automation test manually...")
+
+    # Create test instance
+    test = TestMohnitorBrowserUI()
+    test.setup_class()
+
+    try:
+        test.setup_method()
+
+        print("Testing UI load...")
+        test.test_ui_loads_successfully()
+        print("✓ UI loads successfully")
+
+        print("Testing log display...")
+        test.test_logs_appear_in_ui()
+        print("✓ Logs appear in UI")
+
+        print("Testing real-time updates...")
+        test.test_real_time_log_updates()
+        print("✓ Real-time updates work")
+
+        print("All tests passed!")
+
+    except Exception as e:
+        print(f"Test failed: {e}")
+    finally:
+        test.teardown_method()
+        test.teardown_class()

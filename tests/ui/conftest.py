@@ -1,34 +1,11 @@
+"""
+Shared configuration for UI tests.
+"""
+
 import pytest
 import requests
-from mohflow import MohflowLogger
 
 
-@pytest.fixture
-def basic_logger():
-    """Returns a basic console-only logger"""
-    return MohflowLogger(
-        service_name="test-service", enable_sensitive_data_filter=False
-    )
-
-
-@pytest.fixture
-def temp_log_file(tmp_path):
-    """Creates a temporary log file"""
-    log_file = tmp_path / "test.log"
-    return str(log_file)
-
-
-@pytest.fixture
-def file_logger(temp_log_file):
-    """Returns a logger with file output"""
-    return MohflowLogger(
-        service_name="test-service",
-        file_logging=True,
-        log_file_path=temp_log_file,
-    )
-
-
-# UI Test Configuration
 def hub_server_available():
     """Check if Mohnitor hub server is available."""
     try:

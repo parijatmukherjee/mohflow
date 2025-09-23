@@ -43,7 +43,10 @@ Before submitting a pull request, ensure all items are completed:
 
 - [ ] **Specification written** under `specs/` for non-trivial changes
 - [ ] **TDD workflow followed**: tests added/updated before implementation
-- [ ] **Quality gates pass**: `make format && make lint && make test` all green locally
+- [ ] **Quality gates pass**: All commands must execute without errors:
+  - `make format` - Code formatting with black
+  - `make lint` - Linting with flake8 (zero violations required)
+  - `make test` - All 401 tests pass (some may skip due to optional dependencies)
 - [ ] **Documentation updated** (README/docstrings) as needed
 - [ ] **Branch follows naming convention** (feat/, fix/, chore/)
 - [ ] **PR title describes change clearly**
@@ -132,8 +135,17 @@ MohFlow follows these core principles (see [constitution.md](.specify/memory/con
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run all tests (401 tests total)
 make test
+
+# Run test categories
+make test-unit         # 277 unit tests (fast feedback)
+make test-integration  # 17 integration tests (scenarios)
+make test-ui           # 107 UI tests (includes automation)
+
+# Run automation tests specifically
+make test-automation      # Full browser automation (requires Chrome)
+make test-automation-mock # Mock tests (no dependencies)
 
 # Run specific test file
 pytest tests/test_specific.py
@@ -144,9 +156,11 @@ pytest --cov=mohflow --cov-report=html
 
 ### Test Categories
 
-- **Unit tests**: Test individual components in isolation
-- **Integration tests**: Test component interactions
-- **Contract tests**: Validate API contracts
+- **Unit tests** (277): Test individual components in isolation
+- **Integration tests** (17): Test complete scenarios with multiple components
+- **UI tests** (107): Test Mohnitor UI and browser automation
+- **Automation tests**: Browser-based testing with Selenium
+- **Contract tests**: API contract validation for hub endpoints
 - **Performance tests**: Ensure performance requirements
 
 ## Documentation
