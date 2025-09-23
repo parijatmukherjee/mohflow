@@ -1,0 +1,248 @@
+openapi: 3.0.3
+info:
+  title: Mohnitor Hub API
+  description: Auto-spun log viewer hub endpoints
+  version: 1.0.0
+
+servers:
+  - url: http://127.0.0.1:17361
+    description: Default local hub
+
+paths:
+  /ui:
+    get:
+      summary: Serve static UI application
+      description: Returns the main HTML page for the log viewer interface
+      responses:
+        '200':
+          description: HTML page successfully served
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /healthz:
+    get:
+      summary: Health check endpoint
+      description: Validates hub is running and responsive
+      responses:
+        '200':
+          description: Hub is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy]
+                  uptime:
+                    type: number
+                    description: Seconds since hub started
+                  version:
+                    type: string
+                    description: Mohnitor version
+                required: [status, uptime, version]
+
+  /system:
+    get:
+      summary: System metrics endpoint
+      description: Returns hub operational metrics and statistics
+      responses:
+        '200':
+          description: System metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemMetrics'
+
+  /version:
+    get:
+      summary: Version information
+      description: Returns version and build information
+      responses:
+        '200':
+          description: Version information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                  build_date:
+                    type: string
+                    format: date-time
+                  commit_hash:
+                    type: string
+                required: [version]
+
+  /ws:
+    get:
+      summary: WebSocket endpoint for log streaming
+      description: |
+        WebSocket connection for:
+        - Client log event forwarding (client → hub)
+        - Real-time UI updates (hub → UI)
+      parameters:
+        - name: token
+          in: query
+          description: Authentication token (required for non-localhost)
+          required: false
+          schema:
+            type: string
+        - name: service
+          in: query
+          description: Client service identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '101':
+          description: WebSocket connection established
+        '401':
+          description: Authentication required for remote connections
+        '400':
+          description: Missing required parameters
+
+components:
+  schemas:
+    SystemMetrics:
+      type: object
+      properties:
+        buffer_stats:
+          type: object
+          properties:
+            total_events:
+              type: integer
+              description: Current events in buffer
+            max_events:
+              type: integer
+              description: Buffer capacity
+            dropped_events:
+              type: integer
+              description: Events dropped due to buffer overflow
+            memory_usage_mb:
+              type: number
+              description: Approximate memory usage in MB
+          required: [total_events, max_events, dropped_events]
+
+        client_stats:
+          type: object
+          properties:
+            active_connections:
+              type: integer
+              description: Currently connected clients
+            total_connections:
+              type: integer
+              description: Total connections since start
+            services:
+              type: array
+              items:
+                type: string
+              description: List of connected service names
+          required: [active_connections, total_connections, services]
+
+        performance_stats:
+          type: object
+          properties:
+            events_per_second:
+              type: number
+              description: Recent throughput (last 60s)
+            avg_latency_ms:
+              type: number
+              description: Average event processing latency
+            p95_latency_ms:
+              type: number
+              description: 95th percentile latency
+            drop_rate_percent:
+              type: number
+              description: Percentage of events dropped (last 60s)
+          required: [events_per_second]
+
+        uptime:
+          type: number
+          description: Hub uptime in seconds
+
+        port:
+          type: integer
+          description: Hub listening port
+
+        started_at:
+          type: string
+          format: date-time
+          description: Hub start timestamp
+
+      required: [buffer_stats, client_stats, uptime, port, started_at]
+
+    LogEvent:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Log event timestamp (ISO 8601)
+        level:
+          type: string
+          enum: [DEBUG, INFO, WARN, ERROR, CRITICAL]
+          description: Log level
+        service:
+          type: string
+          description: Source service identifier
+        message:
+          type: string
+          description: Primary log message
+        logger:
+          type: string
+          description: Logger name or module
+        trace_id:
+          type: string
+          description: Correlation/trace identifier
+          nullable: true
+        context:
+          type: object
+          description: Additional structured fields
+          additionalProperties: true
+        source_host:
+          type: string
+          description: Client host identifier
+        source_pid:
+          type: integer
+          description: Client process ID
+        received_at:
+          type: string
+          format: date-time
+          description: Hub receipt timestamp
+      required: [timestamp, level, service, message, logger, source_host, source_pid, received_at]
+
+    FilterRequest:
+      type: object
+      properties:
+        time_range:
+          type: string
+          enum: ["5m", "15m", "1h", "24h"]
+          description: Time range for filtering
+          nullable: true
+        levels:
+          type: array
+          items:
+            type: string
+            enum: [DEBUG, INFO, WARN, ERROR, CRITICAL]
+          description: Include only these log levels
+        services:
+          type: array
+          items:
+            type: string
+          description: Include only these services
+        text_search:
+          type: string
+          description: Free-text search in message field
+          nullable: true
+        field_filters:
+          type: object
+          description: Key-value field constraints
+          additionalProperties: true
+        query_expression:
+          type: string
+          description: MQL query string
+          nullable: true

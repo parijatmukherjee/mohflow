@@ -52,8 +52,15 @@ otel = [
     "opentelemetry-propagator-b3>=1.20.0",
     "opentelemetry-propagator-jaeger>=1.20.0",
 ]
+mohnitor = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "websockets>=12.0",
+    "aiofiles>=23.0.0",
+]
 all = [
     "mohflow[otel]",
+    "mohflow[mohnitor]",
     "psutil>=5.9.0",
     "loguru>=0.7.0",
     "structlog>=23.0.0",

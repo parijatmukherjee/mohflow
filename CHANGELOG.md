@@ -7,17 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+
 ### Added
-- Comprehensive documentation hardening with quickstart guide, quality gates explanation, TDD workflow, and spec-kit development process
-- CONTRIBUTING.md with detailed contributor onboarding and pre-PR checklist
-- CI status badge and supported Python versions in README.md
-- Enhanced constitution.md with explicit quality gate requirements and completion criteria
+- Mohnitor auto-spun log viewer: Kibana-lite UI for structured JSON logs with automatic hub discovery
+- Real-time log streaming with sub-150ms latency and live filtering capabilities
+- Cross-service trace correlation supporting click-to-filter on trace identifiers
+- Bounded in-memory buffer (50k events default) with configurable sizing
+- Web-based UI accessible via local browser with export functionality (NDJSON format)
+- Automatic hub failover and client discovery using file descriptors and health checks
+- Browser automation test suite with Selenium WebDriver for comprehensive UI validation
+- System metrics display including buffer usage, drop rates, and connected clients
 
 ### Changed
-- README.md restructured with quickstart section and clear development workflow guidance
-- constitution.md updated with specific flake8 configuration references and final checks
+- Test organization restructured from scattered files to clean hierarchy (tests/unit/, tests/integration/, tests/ui/)
+- README.md updated with comprehensive test suite details and browser automation testing capabilities
+- Enhanced async test support with proper pytest-asyncio decorators
+- Improved flake8 configuration for better code quality balance
+
+### Fixed
+- Missing async test decorators causing pytest collection failures
+- Undefined variable errors in test scripts (missing sys imports)
+- Bare except clauses updated to proper exception handling
+- TestLogGenerator renamed to LogGenerator to avoid pytest collection confusion
+- GitHub workflow now passes all quality gates (339 tests pass, 62 skip gracefully)
 
 ### Removed
+- Root-level test files moved to proper test structure organization
 - SECURITY.md (generic template with placeholder content)
 - TECHNICAL_PLAN.md (outdated technical plan conflicting with current structure)
 - benchmarks/README.md (specialized documentation not essential for core contributor workflow)
