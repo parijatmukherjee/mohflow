@@ -256,7 +256,7 @@ class MohnitorHub:
                             if websocket.client
                             else "unknown"
                         ),
-                        pid=os.getpid(),  # Simplified
+                        pid=os.getpid(),  # TODO: Should use client PID from WebSocket headers or client-provided metadata
                         connected_at=datetime.now(timezone.utc),
                         last_seen=datetime.now(timezone.utc),
                         is_authenticated=True,
