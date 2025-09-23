@@ -19,6 +19,11 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def parse_iso_datetime(iso_string: str) -> datetime:
+    """Parse ISO datetime string with Z timezone handling."""
+    return datetime.fromisoformat(iso_string.replace("Z", "+00:00"))
+
+
 @dataclass
 class HubDescriptor:
     """Discovery and connection metadata for active Mohnitor hub."""
@@ -93,9 +98,7 @@ class HubDescriptor:
             port=data["port"],
             pid=data["pid"],
             token=data.get("token"),
-            created_at=datetime.fromisoformat(
-                data["created_at"].replace("Z", "+00:00")
-            ),
+            created_at=parse_iso_datetime(data["created_at"]),
             version=data["version"],
         )
 
