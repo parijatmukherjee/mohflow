@@ -109,7 +109,7 @@ class TestMohnitorUIAutomation:
             ("/healthz", "application/json"),
             ("/version", "application/json"),
             ("/system", "application/json"),
-            ("/", "text/html"),
+            ("/ui", "text/html"),
         ]
 
         for endpoint, expected_content_type in endpoints:
