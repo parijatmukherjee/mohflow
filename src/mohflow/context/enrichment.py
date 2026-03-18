@@ -15,7 +15,6 @@ from contextvars import ContextVar
 
 from mohflow.static_config import CONTEXT_FIELDS
 
-
 # Context variables for thread-safe context management
 _request_context: ContextVar[Optional["RequestContext"]] = ContextVar(
     "request_context", default=None
