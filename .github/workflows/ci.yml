@@ -46,10 +46,12 @@ jobs:
         pip install -e ".[dev]"
 
     - name: Format check with black
+      if: matrix.python-version == '3.11'
       run: |
         black --check src tests
 
     - name: Lint with flake8
+      if: matrix.python-version == '3.11'
       run: |
         flake8 src tests
 
