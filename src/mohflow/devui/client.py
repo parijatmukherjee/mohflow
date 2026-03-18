@@ -119,9 +119,9 @@ class MohnitorForwardingHandler(logging.Handler):
                             self.log_queue.task_done()
                         except queue.Empty:
                             # Send periodic heartbeat
-                            heartbeat["payload"]["timestamp"] = (
-                                datetime.now(timezone.utc).isoformat() + "Z"
-                            )
+                            heartbeat["payload"]["timestamp"] = datetime.now(
+                                timezone.utc
+                            ).isoformat()
                             heartbeat["payload"][
                                 "events_queued"
                             ] = self.log_queue.qsize()

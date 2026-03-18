@@ -93,7 +93,9 @@ def hub_server():
     port = _find_free_port()
     ready = multiprocessing.Event()
 
-    proc = multiprocessing.Process(target=_run_hub, args=(port, ready), daemon=True)
+    proc = multiprocessing.Process(
+        target=_run_hub, args=(port, ready), daemon=True
+    )
     proc.start()
 
     # Wait up to 10s for hub to be ready
@@ -137,7 +139,9 @@ def browser_context():
     pw.stop()
 
 
-def _send_log_via_ws(host: str, port: int, service: str, level: str, message: str):
+def _send_log_via_ws(
+    host: str, port: int, service: str, level: str, message: str
+):
     """Send a single log event to the hub via a quick WebSocket connection."""
     import websocket as ws_client
 
@@ -165,7 +169,9 @@ def _send_log_via_ws(host: str, port: int, service: str, level: str, message: st
     conn.close()
 
 
-def _send_log_via_http_ws(host: str, port: int, service: str, level: str, message: str):
+def _send_log_via_http_ws(
+    host: str, port: int, service: str, level: str, message: str
+):
     """Send a log event using websocket-client library."""
     try:
         _send_log_via_ws(host, port, service, level, message)
@@ -189,7 +195,9 @@ class TestMohnitorUIRendering:
         page = browser_context.new_page()
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
             assert "Mohnitor" in page.title() or "Mohnitor" in page.content()
         finally:
             page.close()
@@ -200,7 +208,9 @@ class TestMohnitorUIRendering:
         page = browser_context.new_page()
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
             content = page.content()
             assert str(port) in content
         finally:
@@ -212,7 +222,9 @@ class TestMohnitorUIRendering:
         page = browser_context.new_page()
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
             heading = page.locator("h1")
             assert heading.count() > 0
             assert "Log Viewer" in heading.first.text_content()
@@ -232,9 +244,11 @@ class TestMohnitorHealthEndpoints:
         try:
             resp = page.goto(f"http://{host}:{port}/healthz")
             assert resp.status == 200
-            body = json.loads(page.content().split("<pre>")[-1].split("</pre>")[0]
-                              if "<pre>" in page.content()
-                              else page.locator("body").text_content())
+            body = json.loads(
+                page.content().split("<pre>")[-1].split("</pre>")[0]
+                if "<pre>" in page.content()
+                else page.locator("body").text_content()
+            )
             assert body["status"] == "healthy"
         finally:
             page.close()
@@ -273,13 +287,17 @@ class TestMohnitorHealthEndpoints:
 class TestMohnitorWebSocketInBrowser:
     """Test WebSocket interactions from within the browser using page.evaluate."""
 
-    def test_websocket_connection_from_browser(self, hub_server, browser_context):
+    def test_websocket_connection_from_browser(
+        self, hub_server, browser_context
+    ):
         """Browser-side JS can open a WebSocket to the hub."""
         host, port = hub_server
         page = browser_context.new_page()
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
 
             # Open a WebSocket from JS and verify it connects
             result = page.evaluate(
@@ -301,13 +319,17 @@ class TestMohnitorWebSocketInBrowser:
         finally:
             page.close()
 
-    def test_websocket_receives_initial_data(self, hub_server, browser_context):
+    def test_websocket_receives_initial_data(
+        self, hub_server, browser_context
+    ):
         """Browser-side WebSocket should receive initial system_stats message."""
         host, port = hub_server
         page = browser_context.new_page()
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
 
             # Connect via WebSocket and capture the first message
             result = page.evaluate(
@@ -341,13 +363,17 @@ class TestMohnitorWebSocketInBrowser:
         finally:
             page.close()
 
-    def test_websocket_ping_pong_from_browser(self, hub_server, browser_context):
+    def test_websocket_ping_pong_from_browser(
+        self, hub_server, browser_context
+    ):
         """Browser sends ping, hub replies with pong."""
         host, port = hub_server
         page = browser_context.new_page()
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
 
             result = page.evaluate(
                 """async () => {
@@ -387,14 +413,18 @@ class TestMohnitorWebSocketInBrowser:
 class TestMohnitorLiveLogDisplay:
     """Test that logs sent to the hub appear when queried from the browser."""
 
-    def test_logs_visible_via_system_endpoint(self, hub_server, browser_context):
+    def test_logs_visible_via_system_endpoint(
+        self, hub_server, browser_context
+    ):
         """After sending logs, /system shows them in total_events count."""
         host, port = hub_server
         page = browser_context.new_page()
 
         try:
             # Send a log event via WebSocket from browser JS
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
 
             page.evaluate(
                 """async () => {
@@ -436,13 +466,17 @@ class TestMohnitorLiveLogDisplay:
         finally:
             page.close()
 
-    def test_log_event_received_by_ui_websocket(self, hub_server, browser_context):
+    def test_log_event_received_by_ui_websocket(
+        self, hub_server, browser_context
+    ):
         """UI WebSocket in the browser receives a log event sent by a client."""
         host, port = hub_server
         page = browser_context.new_page()
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
 
             # 1) Open UI WebSocket
             # 2) Open client WebSocket, send a log
@@ -506,7 +540,8 @@ class TestMohnitorLiveLogDisplay:
                 m
                 for m in result
                 if m.get("type") == "log_event"
-                and m.get("payload", {}).get("message") == "browser-injected-error"
+                and m.get("payload", {}).get("message")
+                == "browser-injected-error"
             ]
             assert len(log_events) >= 1
             payload = log_events[0]["payload"]
@@ -527,7 +562,9 @@ class TestMohnitorUIAccessibility:
         page = browser_context.new_page()
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
 
             # Should have html, head, body
             assert page.locator("html").count() == 1
@@ -543,7 +580,9 @@ class TestMohnitorUIAccessibility:
         page = browser_context.new_page()
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
             assert "Mohnitor" in page.title()
         finally:
             page.close()
@@ -557,7 +596,9 @@ class TestMohnitorUIAccessibility:
         page.on("pageerror", lambda err: errors.append(str(err)))
 
         try:
-            page.goto(f"http://{host}:{port}/ui", wait_until="domcontentloaded")
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
             time.sleep(1)  # Let any async JS settle
             assert len(errors) == 0, f"Console errors found: {errors}"
         finally:

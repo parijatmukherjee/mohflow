@@ -16,7 +16,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import uuid
 
-
 # Context variables for async-safe storage
 _request_context: contextvars.ContextVar[Dict[str, Any]] = (
     contextvars.ContextVar("request_context", default={})

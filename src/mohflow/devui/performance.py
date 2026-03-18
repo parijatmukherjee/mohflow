@@ -76,7 +76,7 @@ class MessageBatcher:
             "type": "batch",
             "events": self.pending_messages,
             "count": len(self.pending_messages),
-            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         batch_json = json.dumps(batch)
