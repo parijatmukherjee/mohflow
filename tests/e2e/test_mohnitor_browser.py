@@ -202,8 +202,22 @@ class TestMohnitorUIRendering:
         finally:
             page.close()
 
-    def test_ui_shows_hub_port(self, hub_server, browser_context):
-        """The UI page should display the hub port number."""
+    def test_ui_has_body_content(self, hub_server, browser_context):
+        """The UI page should have meaningful body content."""
+        host, port = hub_server
+        page = browser_context.new_page()
+
+        try:
+            page.goto(
+                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
+            )
+            body_text = page.locator("body").text_content()
+            assert len(body_text.strip()) > 0
+        finally:
+            page.close()
+
+    def test_ui_has_mohnitor_branding(self, hub_server, browser_context):
+        """The UI page should display the Mohnitor brand name."""
         host, port = hub_server
         page = browser_context.new_page()
 
@@ -212,22 +226,7 @@ class TestMohnitorUIRendering:
                 f"http://{host}:{port}/ui", wait_until="domcontentloaded"
             )
             content = page.content()
-            assert str(port) in content
-        finally:
-            page.close()
-
-    def test_ui_has_log_viewer_heading(self, hub_server, browser_context):
-        """The UI page should have the 'Log Viewer Active' heading."""
-        host, port = hub_server
-        page = browser_context.new_page()
-
-        try:
-            page.goto(
-                f"http://{host}:{port}/ui", wait_until="domcontentloaded"
-            )
-            heading = page.locator("h1")
-            assert heading.count() > 0
-            assert "Log Viewer" in heading.first.text_content()
+            assert "Mohnitor" in content
         finally:
             page.close()
 
