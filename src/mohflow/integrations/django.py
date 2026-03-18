@@ -8,7 +8,7 @@ Django integration with automatic request/response logging.
 import time
 import uuid
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 try:
     from django.conf import settings
@@ -195,7 +195,7 @@ class MohFlowDjangoMiddleware(MiddlewareMixin):
             "request_size": (
                 len(request.body) if hasattr(request, "body") else None
             ),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "django_view": None,  # Will be set by view decorator if used
         }
 
@@ -349,7 +349,7 @@ def setup_command_logging(logger: Any, command_name: str):
     command_logger.set_context(
         component="management_command",
         command=command_name,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
     return command_logger

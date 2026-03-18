@@ -1,3 +1,5 @@
+import warnings
+
 from .logger.base import MohflowLogger
 from .exceptions import MohflowError, ConfigurationError
 from .config_loader import ConfigLoader
@@ -7,7 +9,7 @@ from .auto_config import detect_environment, auto_configure
 from .templates import TemplateManager
 from .context_api import bind_context, unbind_context, clear_context
 
-__version__ = "0.1.3"
+__version__ = "1.1.2"
 
 
 class _LazyLog:
@@ -76,12 +78,16 @@ def get_logger(
                 },
             )
         except ImportError:
-            print(
-                "⚠️  Mohnitor not available. Install with: "
-                "pip install mohflow[mohnitor]"
+            warnings.warn(
+                "Mohnitor not available. Install with: "
+                "pip install mohflow[mohnitor]",
+                stacklevel=2,
             )
         except Exception as e:
-            print(f"⚠️  Failed to enable Mohnitor: {e}")
+            warnings.warn(
+                f"Failed to enable Mohnitor: {e}",
+                stacklevel=2,
+            )
 
     return logger
 

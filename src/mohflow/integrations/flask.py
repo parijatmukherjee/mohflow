@@ -9,7 +9,7 @@ import time
 import uuid
 import functools
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from werkzeug.exceptions import HTTPException
 
 try:
@@ -223,7 +223,7 @@ class MohFlowFlaskExtension:
             "client_ip": self._get_client_ip(),
             "content_type": request.content_type,
             "request_size": request.content_length,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "flask_endpoint": request.endpoint,
             "flask_view_args": (
                 dict(request.view_args) if request.view_args else None
@@ -428,7 +428,7 @@ def log_business_event(logger: Any, event: str, **context):
 
     context_data = {
         "business_event": event,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         **context,
     }
 
@@ -452,7 +452,7 @@ def create_health_route(logger: Any):
         return jsonify(
             {
                 "status": "healthy",
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "request_id": get_request_id(),
             }
         )

@@ -8,7 +8,7 @@ monitoring for FastAPI applications with minimal configuration.
 import time
 import uuid
 from typing import Optional, Dict, Any, Callable, List, Set
-from datetime import datetime
+from datetime import datetime, timezone
 
 try:
     from fastapi import Request, Response, FastAPI
@@ -199,7 +199,7 @@ class MohFlowFastAPIMiddleware(BaseHTTPMiddleware):
             "request_size": request.headers.get("content-length"),
             "content_type": request.headers.get("content-type"),
             "request_id": request_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Add request body if enabled
@@ -362,7 +362,7 @@ def create_health_endpoint(logger: Any):
         logger.info("Health check requested", endpoint="health", status="ok")
         return {
             "status": "healthy",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     return health_check

@@ -55,7 +55,7 @@ def test_data_models():
 
     try:
         from mohflow.devui.types import LogEvent, HubDescriptor
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         # Test HubDescriptor
         descriptor = HubDescriptor(
@@ -63,7 +63,7 @@ def test_data_models():
             port=17361,
             pid=12345,
             token=None,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             version="1.0.0",
         )
 
@@ -75,7 +75,7 @@ def test_data_models():
 
         # Test LogEvent
         log_event = LogEvent(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             level="INFO",
             service="test-service",
             message="Test message",
