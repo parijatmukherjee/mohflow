@@ -82,7 +82,7 @@ def _discover_from_remote_url(remote_url: str) -> Optional[HubDescriptor]:
                 return HubDescriptor(
                     host=host,
                     port=port,
-                    pid=0,  # Unknown PID for remote
+                    pid=os.getpid(),  # Use current PID
                     token=os.getenv("MOHNITOR_TOKEN"),
                     created_at=time.time(),
                     version="1.0.0",
@@ -139,7 +139,7 @@ def _probe_default_port() -> Optional[HubDescriptor]:
                 return HubDescriptor(
                     host="127.0.0.1",
                     port=port,
-                    pid=0,  # Unknown PID
+                    pid=os.getpid(),  # Use current PID
                     token=None,  # Localhost
                     created_at=time.time(),
                     version="1.0.0",

@@ -355,7 +355,15 @@ class MohflowLogger(ContextualLogger):
         }
 
         # Select formatter type
-        if self.formatter_type == "fast":
+        if self.formatter_type == "colored":
+            from mohflow.formatters.colored_console import (
+                ColoredConsoleFormatter,
+            )
+
+            return ColoredConsoleFormatter(
+                static_fields=formatter_config["static_fields"],
+            )
+        elif self.formatter_type == "fast":
             return FastJSONFormatter(**formatter_config)
         elif self.formatter_type == "production":
             from mohflow.formatters.structured_formatter import (
@@ -491,8 +499,32 @@ class MohflowLogger(ContextualLogger):
         return config_dict
 
     def _prepare_extra(self, extra: Dict[str, Any]) -> Dict[str, Any]:
-        """Prepare extra fields for logging with enrichment and filtering"""
-        enriched_extra = extra.copy()
+        """Prepare extra fields for logging with enrichment and filtering.
+
+        Supports lazy evaluation: any value that is a callable (lambda
+        or function) will be invoked and replaced with its return value.
+        This avoids computing expensive arguments when the log message
+        is filtered out by level or sampling.
+        """
+        # Evaluate lazy (callable) values
+        enriched_extra = {}
+        for key, value in extra.items():
+            if callable(value) and not isinstance(value, type):
+                try:
+                    enriched_extra[key] = value()
+                except Exception:
+                    enriched_extra[key] = "<lazy evaluation error>"
+            else:
+                enriched_extra[key] = value
+
+        # Merge bound context from contextvars API
+        from mohflow.context_api import get_bound_context
+
+        bound = get_bound_context()
+        if bound:
+            merged = dict(bound)
+            merged.update(enriched_extra)
+            enriched_extra = merged
 
         # Apply context enrichment
         if self.context_enricher:

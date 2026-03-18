@@ -95,7 +95,7 @@ class MohFlowCeleryIntegration:
             task.mohflow_context = task_context
 
         # Log task start
-        with self.logger.request_context(task_id=task_id, **task_context):
+        with self.logger.request_context(**task_context):
             self.logger.info(
                 f"Task {task_context['task_name']} started", **task_context
             )
@@ -136,7 +136,7 @@ class MohFlowCeleryIntegration:
                 task_context["return_value"] = serialized_retval
 
         # Log task completion
-        with self.logger.request_context(task_id=task_id, **task_context):
+        with self.logger.request_context(**task_context):
             if state == "SUCCESS":
                 self.logger.info(
                     f"Task {task_context['task_name']} completed successfully "
@@ -166,7 +166,7 @@ class MohFlowCeleryIntegration:
         }
 
         # Log task failure
-        with self.logger.request_context(task_id=task_id, **task_context):
+        with self.logger.request_context(**task_context):
             self.logger.error(
                 f"Task {task_context['task_name']} failed", **task_context
             )
@@ -184,7 +184,7 @@ class MohFlowCeleryIntegration:
         }
 
         # Log task retry
-        with self.logger.request_context(task_id=task_id, **task_context):
+        with self.logger.request_context(**task_context):
             self.logger.warning(
                 f"Task {task_context['task_name']} will be retried",
                 **task_context,

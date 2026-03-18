@@ -21,6 +21,14 @@ try:
     HAS_OPENTELEMETRY = True
 except ImportError:
     HAS_OPENTELEMETRY = False
+    propagate = None  # type: ignore[assignment]
+    context = None  # type: ignore[assignment]
+    B3MultiFormat = None  # type: ignore[assignment]
+    B3SingleFormat = None  # type: ignore[assignment]
+    JaegerPropagator = None  # type: ignore[assignment]
+    TraceContextTextMapPropagator = None  # type: ignore[assignment]
+    W3CBaggagePropagator = None  # type: ignore[assignment]
+    CompositePropagator = None  # type: ignore[assignment]
 
 
 def setup_trace_propagation(propagator_types: Optional[list] = None) -> bool:

@@ -5,8 +5,44 @@ from .context.enrichment import RequestContext, with_request_context
 from .context.correlation import CorrelationContext, with_correlation_id
 from .auto_config import detect_environment, auto_configure
 from .templates import TemplateManager
+from .context_api import bind_context, unbind_context, clear_context
 
 __version__ = "0.1.3"
+
+
+class _LazyLog:
+    """Lazy proxy for the zero-config log singleton.
+
+    Defers MohflowLogger creation until first attribute access, so
+    ``from mohflow import log`` is side-effect-free at import time.
+    Smart defaults: auto-detect environment, INFO level, console output.
+    """
+
+    _instance = None
+
+    def _get_logger(self):
+        if _LazyLog._instance is None:
+            _LazyLog._instance = MohflowLogger(
+                service_name="app",
+                log_level="INFO",
+                console_logging=True,
+                file_logging=False,
+                enable_context_enrichment=True,
+                enable_sensitive_data_filter=True,
+                formatter_type="structured",
+            )
+        return _LazyLog._instance
+
+    def __getattr__(self, name):
+        return getattr(self._get_logger(), name)
+
+    def __repr__(self):
+        if _LazyLog._instance is None:
+            return "<mohflow.log (not yet initialized)>"
+        return repr(_LazyLog._instance)
+
+
+log = _LazyLog()
 
 
 def get_logger(
@@ -41,7 +77,8 @@ def get_logger(
             )
         except ImportError:
             print(
-                "⚠️  Mohnitor not available. Install with: pip install mohflow[mohnitor]"
+                "⚠️  Mohnitor not available. Install with: "
+                "pip install mohflow[mohnitor]"
             )
         except Exception as e:
             print(f"⚠️  Failed to enable Mohnitor: {e}")
@@ -52,6 +89,7 @@ def get_logger(
 __all__ = [
     "MohflowLogger",
     "get_logger",
+    "log",
     "MohflowError",
     "ConfigurationError",
     "ConfigLoader",
@@ -62,4 +100,7 @@ __all__ = [
     "detect_environment",
     "auto_configure",
     "TemplateManager",
+    "bind_context",
+    "unbind_context",
+    "clear_context",
 ]

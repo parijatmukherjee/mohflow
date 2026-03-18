@@ -1,6 +1,45 @@
+import logging
 import pytest
 import requests
 from mohflow import MohflowLogger
+
+
+@pytest.fixture(autouse=True)
+def _clean_mohflow_state():
+    """Reset MohFlow global state between every test."""
+    yield
+    # Clear bound context from contextvars API
+    try:
+        from mohflow.context_api import clear_context
+
+        clear_context()
+    except ImportError:
+        pass
+
+    # Reset the lazy log singleton so tests don't leak state
+    try:
+        from mohflow import _LazyLog
+
+        _LazyLog._instance = None
+    except (ImportError, AttributeError):
+        pass
+
+    # Clear correlation ID
+    try:
+        from mohflow.context.correlation import clear_correlation_id
+
+        clear_correlation_id()
+    except ImportError:
+        pass
+
+    # Reset root logger handlers to prevent handler accumulation
+    root = logging.getLogger()
+    for handler in root.handlers[:]:
+        try:
+            handler.close()
+        except Exception:
+            pass
+    root.handlers.clear()
 
 
 @pytest.fixture
