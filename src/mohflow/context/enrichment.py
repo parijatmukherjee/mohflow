@@ -7,6 +7,7 @@ import os
 import time
 import uuid
 import threading
+import functools
 from typing import Dict, Any, Optional, Callable
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
@@ -473,6 +474,7 @@ def with_request_context(context_or_request_id=None, **kwargs):
         }
 
         def decorator(func):
+            @functools.wraps(func)
             def wrapper(*args, **func_kwargs):
                 op_name = operation_name or func.__name__
                 with RequestContextManager(
@@ -512,6 +514,7 @@ def with_request_context_decorator(
     """
 
     def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             op_name = operation_name or func.__name__
             with RequestContextManager(
@@ -538,6 +541,7 @@ def with_global_context(**fields):
     """
 
     def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             with GlobalContextManager(**fields):
                 return func(*args, **kwargs)

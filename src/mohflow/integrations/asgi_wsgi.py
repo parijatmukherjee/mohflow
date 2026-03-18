@@ -9,7 +9,7 @@ import time
 import uuid
 import asyncio
 from typing import Optional, Dict, Any, Callable, List, Set
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class MohFlowASGIMiddleware:
@@ -177,7 +177,7 @@ class MohFlowASGIMiddleware:
             "server": scope.get("server"),
             "client": scope.get("client"),
             "request_id": request_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Extract headers
@@ -416,7 +416,7 @@ class MohFlowWSGIMiddleware:
             "content_type": environ.get("CONTENT_TYPE"),
             "content_length": environ.get("CONTENT_LENGTH"),
             "request_id": request_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Extract client IP
@@ -553,7 +553,7 @@ def log_request_manually(logger: Any, method: str, path: str, **context):
     request_context = {
         "method": method,
         "path": path,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         **context,
     }
 
@@ -578,7 +578,7 @@ def log_response_manually(
         "path": path,
         "status_code": status_code,
         "duration": duration_ms,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         **context,
     }
 

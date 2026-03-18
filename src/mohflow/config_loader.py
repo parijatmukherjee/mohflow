@@ -100,7 +100,7 @@ class ConfigLoader:
     def _load_env_config(self) -> Dict[str, Any]:
         """Load configuration from environment variables"""
         env_config = {}
-        env_prefix = "MOHFLOW_"
+        env_prefix = self.env_prefix
 
         # Map environment variables to config keys
         env_mappings = {

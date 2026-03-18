@@ -1,5 +1,6 @@
 import logging
 import time
+import warnings
 from typing import Optional, Dict, Any, List, Union
 from pathlib import Path
 from mohflow.config import LogConfig
@@ -270,7 +271,7 @@ class MohflowLogger(ContextualLogger):
             console_handler.setFormatter(formatter)
             logger.addHandler(console_handler)
 
-        # Add file handler
+        # Add file handler with rotation by default
         if self.config.FILE_LOGGING and self.config.LOG_FILE_PATH:
             if self.async_handlers:
                 from mohflow.handlers.async_handlers import (
@@ -281,7 +282,14 @@ class MohflowLogger(ContextualLogger):
                     self.config.LOG_FILE_PATH
                 )
             else:
-                file_handler = logging.FileHandler(self.config.LOG_FILE_PATH)
+                from logging.handlers import RotatingFileHandler
+
+                file_handler = RotatingFileHandler(
+                    self.config.LOG_FILE_PATH,
+                    maxBytes=100 * 1024 * 1024,  # 100 MB
+                    backupCount=5,
+                    encoding="utf-8",
+                )
             file_handler.setFormatter(formatter)
             file_handler.setLevel(logging.INFO)
             logger.addHandler(file_handler)
@@ -335,8 +343,11 @@ class MohflowLogger(ContextualLogger):
 
                     setup_trace_propagation(self.otel_propagators)
 
-        except Exception:
-            # Silently fail if OpenTelemetry setup fails
+        except Exception as e:
+            warnings.warn(
+                f"OpenTelemetry setup failed: {e}",
+                stacklevel=2,
+            )
             self.enable_otel = False
             self.otel_enricher = None
 
@@ -537,9 +548,12 @@ class MohflowLogger(ContextualLogger):
                     f"Extracted metrics: {metric_names}",
                     extracted_metrics=metric_names,
                 )
-        except Exception:
-            # Don't let metrics processing break logging
-            pass
+        except Exception as e:
+            # Don't let metrics processing break logging, but
+            # surface the error so it can be debugged
+            logging.getLogger(__name__).debug(
+                "Metrics processing error: %s", e
+            )
 
     def set_context(self, **context_fields: Any) -> None:
         """Set global context fields for all future log messages"""

@@ -212,11 +212,11 @@ class FastJSONFormatter(OrjsonFormatter):
         super().__init__(**kwargs)
 
 
-class StructuredFormatter(OrjsonFormatter):
+class PrettyJSONFormatter(OrjsonFormatter):
     """
-    Formatter optimized for structured logging with rich context.
+    Formatter optimized for human-readable JSON output with rich context.
 
-    Includes comprehensive field set and human-readable formatting
+    Includes comprehensive field set and indented formatting
     suitable for development and debugging.
     """
 

@@ -1,12 +1,29 @@
 """Async-safe handlers for high-performance logging in async applications."""
 
+import atexit
 import logging
 import queue
 import threading
 import time
+import weakref
 from typing import Optional, Dict, Any, List
 from logging.handlers import QueueHandler, QueueListener
 from concurrent.futures import ThreadPoolExecutor
+
+# Registry of active async handlers for atexit cleanup
+_active_handlers: weakref.WeakSet = weakref.WeakSet()
+
+
+def _shutdown_all_handlers() -> None:
+    """Shutdown all active async handlers on interpreter exit."""
+    for handler in list(_active_handlers):
+        try:
+            handler.close()
+        except Exception:
+            pass
+
+
+atexit.register(_shutdown_all_handlers)
 
 
 class AsyncSafeHandler(logging.Handler):
@@ -55,6 +72,9 @@ class AsyncSafeHandler(logging.Handler):
 
         # Start background processing
         self._start_processing()
+
+        # Register for atexit cleanup
+        _active_handlers.add(self)
 
     def _start_processing(self):
         """Start background processing threads."""

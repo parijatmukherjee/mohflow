@@ -59,6 +59,7 @@ dmypy.json
 
 # Coverage reports
 htmlcov/
+coverage.xml
 .coverage.*
 
 # Temporary files and folders

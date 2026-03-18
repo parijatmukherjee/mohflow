@@ -7,7 +7,7 @@ This test MUST FAIL initially until the hub server is implemented.
 import pytest
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 try:
     import websockets
@@ -54,7 +54,7 @@ class TestWebSocketContract:
             log_event = {
                 "type": "log_event",
                 "payload": {
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                     "level": "INFO",
                     "service": "test-service",
                     "message": "Test log message",
@@ -79,7 +79,7 @@ class TestWebSocketContract:
             heartbeat = {
                 "type": "heartbeat",
                 "payload": {
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                     "pid": 12345,
                     "events_queued": 0,
                 },
@@ -127,7 +127,8 @@ class TestWebSocketContract:
                 valid_message = {
                     "type": "heartbeat",
                     "payload": {
-                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                        + "Z",
                         "pid": 1,
                     },
                 }
@@ -148,7 +149,7 @@ class TestWebSocketContract:
             large_log_event = {
                 "type": "log_event",
                 "payload": {
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                     "level": "INFO",
                     "service": "test-service",
                     "message": "Large message test",
