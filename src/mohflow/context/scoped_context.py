@@ -16,7 +16,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import uuid
 
-
 # Context variables for async-safe storage
 _request_context: contextvars.ContextVar[Dict[str, Any]] = (
     contextvars.ContextVar("request_context", default={})
@@ -53,6 +52,7 @@ class ScopedContextManager:
         self._thread_local = threading.local()
         self._global_context: Dict[str, Any] = {}
         self._context_stack: Dict[str, ContextScope] = {}
+        self._stack_lock = threading.Lock()
 
     def set_global_context(self, **kwargs: Any) -> None:
         """
@@ -97,14 +97,16 @@ class ScopedContextManager:
             # Set new request context (merged with current)
             merged_context = {**current_context, **kwargs}
             _request_context.set(merged_context)
-            self._context_stack[scope.scope_id] = scope
+            with self._stack_lock:
+                self._context_stack[scope.scope_id] = scope
 
             yield scope.scope_id
 
         finally:
             # Restore previous request context
             _request_context.set(current_context)
-            self._context_stack.pop(scope.scope_id, None)
+            with self._stack_lock:
+                self._context_stack.pop(scope.scope_id, None)
 
     @contextmanager
     def thread_context(self, **kwargs: Any) -> Generator[str, None, None]:
@@ -130,14 +132,16 @@ class ScopedContextManager:
             # Set new thread context (merged with current)
             merged_context = {**current_context, **kwargs}
             _thread_context.set(merged_context)
-            self._context_stack[scope.scope_id] = scope
+            with self._stack_lock:
+                self._context_stack[scope.scope_id] = scope
 
             yield scope.scope_id
 
         finally:
             # Restore previous thread context
             _thread_context.set(current_context)
-            self._context_stack.pop(scope.scope_id, None)
+            with self._stack_lock:
+                self._context_stack.pop(scope.scope_id, None)
 
     @contextmanager
     def temporary_context(self, **kwargs: Any) -> Generator[str, None, None]:
@@ -165,14 +169,16 @@ class ScopedContextManager:
             # Set new temporary context (merged with current)
             merged_context = {**current_context, **kwargs}
             _temporary_context.set(merged_context)
-            self._context_stack[scope.scope_id] = scope
+            with self._stack_lock:
+                self._context_stack[scope.scope_id] = scope
 
             yield scope.scope_id
 
         finally:
             # Restore previous temporary context
             _temporary_context.set(current_context)
-            self._context_stack.pop(scope.scope_id, None)
+            with self._stack_lock:
+                self._context_stack.pop(scope.scope_id, None)
 
     def get_current_context(self) -> Dict[str, Any]:
         """
@@ -204,7 +210,10 @@ class ScopedContextManager:
         """
         active_scopes = []
 
-        for scope_id, scope in self._context_stack.items():
+        with self._stack_lock:
+            stack_snapshot = dict(self._context_stack)
+
+        for scope_id, scope in stack_snapshot.items():
             active_scopes.append(
                 {
                     "scope_id": scope_id,
@@ -230,7 +239,8 @@ class ScopedContextManager:
         _request_context.set({})
         _thread_context.set({})
         _temporary_context.set({})
-        self._context_stack.clear()
+        with self._stack_lock:
+            self._context_stack.clear()
 
 
 class ContextualLogger:

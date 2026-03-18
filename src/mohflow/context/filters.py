@@ -763,9 +763,6 @@ class SensitiveDataFilter:
             field_name.lower() if not self.case_sensitive else field_name
         )
 
-        # Check if any pattern matches the field name
-        import re
-
         for pattern in self.sensitive_patterns:
             if isinstance(pattern, str):
                 try:
@@ -787,8 +784,6 @@ class SensitiveDataFilter:
         """Check if a value contains sensitive patterns"""
         if not isinstance(value, str):
             return False
-
-        import re
 
         # Define comprehensive regex patterns for sensitive data
         patterns = [

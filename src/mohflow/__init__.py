@@ -1,3 +1,5 @@
+import warnings
+
 from .logger.base import MohflowLogger
 from .exceptions import MohflowError, ConfigurationError
 from .config_loader import ConfigLoader
@@ -6,7 +8,7 @@ from .context.correlation import CorrelationContext, with_correlation_id
 from .auto_config import detect_environment, auto_configure
 from .templates import TemplateManager
 
-__version__ = "0.1.3"
+__version__ = "1.1.2"
 
 
 def get_logger(
@@ -40,11 +42,16 @@ def get_logger(
                 },
             )
         except ImportError:
-            print(
-                "⚠️  Mohnitor not available. Install with: pip install mohflow[mohnitor]"
+            warnings.warn(
+                "Mohnitor not available. Install with: "
+                "pip install mohflow[mohnitor]",
+                stacklevel=2,
             )
         except Exception as e:
-            print(f"⚠️  Failed to enable Mohnitor: {e}")
+            warnings.warn(
+                f"Failed to enable Mohnitor: {e}",
+                stacklevel=2,
+            )
 
     return logger
 

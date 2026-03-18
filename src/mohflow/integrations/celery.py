@@ -8,7 +8,7 @@ for Celery distributed tasks with context propagation.
 import time
 import uuid
 from typing import Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 
 try:
@@ -86,7 +86,7 @@ class MohFlowCeleryIntegration:
             "task_args": self._safe_serialize(args),
             "task_kwargs": self._safe_serialize(kwargs),
             "worker_id": kwds.get("hostname"),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "task_start_time": start_time,
         }
 
@@ -126,7 +126,7 @@ class MohFlowCeleryIntegration:
             "task_state": state,
             "duration": duration_ms,
             "worker_id": kwds.get("hostname"),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Add return value if it's serializable and not too large
@@ -162,7 +162,7 @@ class MohFlowCeleryIntegration:
                 type(exception).__name__ if exception else "UnknownError"
             ),
             "traceback": str(einfo) if einfo else None,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Log task failure
@@ -180,7 +180,7 @@ class MohFlowCeleryIntegration:
             "task_name": sender.name if sender else "unknown",
             "retry_reason": str(reason) if reason else "Unknown reason",
             "traceback": str(einfo) if einfo else None,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Log task retry
@@ -197,7 +197,7 @@ class MohFlowCeleryIntegration:
                 sender.hostname if hasattr(sender, "hostname") else "unknown"
             ),
             "worker_pid": sender.pid if hasattr(sender, "pid") else None,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         self.logger.info("Celery worker ready", **worker_context)
@@ -209,7 +209,7 @@ class MohFlowCeleryIntegration:
                 sender.hostname if hasattr(sender, "hostname") else "unknown"
             ),
             "worker_pid": sender.pid if hasattr(sender, "pid") else None,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         self.logger.info("Celery worker shutting down", **worker_context)
@@ -263,7 +263,7 @@ class MohFlowCeleryTask(Task):
                 "correlation_id": options["headers"]["correlation_id"],
                 "task_args": self._safe_serialize(args),
                 "task_kwargs": self._safe_serialize(kwargs),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             self.mohflow_logger.info(
@@ -293,7 +293,7 @@ class MohFlowCeleryTask(Task):
                 "countdown": countdown,
                 "eta": eta.isoformat() if eta else None,
                 "exception": str(exc) if exc else None,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             self.mohflow_logger.warning(
@@ -417,7 +417,7 @@ def create_celery_logger(base_logger: Any, task_name: str) -> Any:
     task_logger.set_context(
         component="celery_task",
         task_name=task_name,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
     return task_logger
@@ -445,7 +445,7 @@ def log_task_progress(
         "progress_current": current,
         "progress_total": total,
         "progress_percent": progress_percent,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
     log_message = (

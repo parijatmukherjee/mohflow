@@ -55,8 +55,9 @@ class PrivacyAwareFilter:
         self._detector = None
         self._initialize_detector()
 
-        # Performance optimization - cache common results
-        self._redaction_cache = {}
+        # Performance optimization - cache redaction results only
+        # (maps hash of input text -> redacted output, never stores raw PII)
+        self._redaction_cache: Dict[int, str] = {}
         self._cache_size_limit = 1000
 
         # Statistics for monitoring
@@ -209,10 +210,11 @@ class PrivacyAwareFilter:
         if not text or not isinstance(text, str):
             return text
 
-        # Check cache first
-        if text in self._redaction_cache:
+        # Check cache using hash to avoid storing raw PII in memory
+        text_hash = hash(text)
+        if text_hash in self._redaction_cache:
             self.stats["cache_hits"] += 1
-            return self._redaction_cache[text]
+            return self._redaction_cache[text_hash]
 
         result = self._detector.detect_pii(text)
 
@@ -223,9 +225,9 @@ class PrivacyAwareFilter:
         else:
             filtered_text = result.redacted_value
 
-        # Cache the result (with size limit)
+        # Cache the result (with size limit, keyed by hash)
         if len(self._redaction_cache) < self._cache_size_limit:
-            self._redaction_cache[text] = filtered_text
+            self._redaction_cache[text_hash] = filtered_text
 
         return filtered_text
 

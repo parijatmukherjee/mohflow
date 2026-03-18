@@ -10,7 +10,6 @@ from contextvars import ContextVar
 
 from mohflow.static_config import CONTEXT_FIELDS
 
-
 # Context variable for correlation ID
 _correlation_id: ContextVar[Optional[str]] = ContextVar(
     "correlation_id", default=None

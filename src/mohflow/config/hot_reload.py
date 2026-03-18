@@ -12,7 +12,7 @@ import signal
 import hashlib
 from pathlib import Path
 from typing import Dict, Any, Optional, Callable, List
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -402,7 +402,7 @@ class HotReloadManager:
     ) -> ConfigChange:
         """Create configuration change record."""
         return ConfigChange(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             config_path=config_path,
             old_config=old_config,
             new_config=new_config,
@@ -565,11 +565,11 @@ class HotReloadManager:
             return False
 
     def _calculate_file_checksum(self, file_path: str) -> str:
-        """Calculate MD5 checksum of file content."""
+        """Calculate SHA-256 checksum of file content."""
         try:
             with open(file_path, "rb") as f:
                 content = f.read()
-            return hashlib.md5(content).hexdigest()
+            return hashlib.sha256(content).hexdigest()
         except Exception:
             return ""
 
