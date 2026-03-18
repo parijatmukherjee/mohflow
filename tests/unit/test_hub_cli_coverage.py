@@ -22,6 +22,18 @@ from unittest.mock import (
 
 import pytest
 
+try:
+    import fastapi  # noqa: F401
+
+    HAS_FASTAPI = True
+except ImportError:
+    HAS_FASTAPI = False
+
+pytestmark = pytest.mark.skipif(
+    not HAS_FASTAPI,
+    reason="FastAPI not installed — hub tests require it",
+)
+
 
 # ---------------------------------------------------------------------------
 # Helper: create a minimal LogEvent-like object for hub buffer tests
