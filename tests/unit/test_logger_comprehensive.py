@@ -832,10 +832,7 @@ class TestSetupLogger:
             enable_sensitive_data_filter=False,
         )
         handler_types = [type(h) for h in logger.logger.handlers]
-        assert any(
-            issubclass(t, logging.FileHandler)
-            for t in handler_types
-        )
+        assert any(issubclass(t, logging.FileHandler) for t in handler_types)
 
     def test_log_level_set_correctly(self):
         logger = MohflowLogger(

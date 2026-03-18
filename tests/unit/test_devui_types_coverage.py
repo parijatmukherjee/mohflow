@@ -24,21 +24,15 @@ class TestUtcnow:
 
 class TestNormalizeIsoTimestamp:
     def test_z_suffix(self):
-        result = _normalize_iso_timestamp(
-            "2024-01-01T00:00:00Z"
-        )
+        result = _normalize_iso_timestamp("2024-01-01T00:00:00Z")
         assert result == "2024-01-01T00:00:00+00:00"
 
     def test_plus_utc_z_suffix(self):
-        result = _normalize_iso_timestamp(
-            "2024-01-01T00:00:00+00:00Z"
-        )
+        result = _normalize_iso_timestamp("2024-01-01T00:00:00+00:00Z")
         assert result == "2024-01-01T00:00:00+00:00"
 
     def test_already_correct(self):
-        result = _normalize_iso_timestamp(
-            "2024-01-01T00:00:00+00:00"
-        )
+        result = _normalize_iso_timestamp("2024-01-01T00:00:00+00:00")
         assert result == "2024-01-01T00:00:00+00:00"
 
 
@@ -51,9 +45,7 @@ class TestParseIsoDatetime:
 class TestFilterConfiguration:
     def test_validate_time_range_invalid(self):
         with pytest.raises(ValueError):
-            fc = FilterConfiguration(
-                name="bad", time_range="99h"
-            )
+            fc = FilterConfiguration(name="bad", time_range="99h")
             fc._validate_time_range()
 
     def test_parse_mql_empty(self):
@@ -61,9 +53,7 @@ class TestFilterConfiguration:
         assert fc.parse_mql() == {}
 
     def test_parse_mql_level(self):
-        fc = FilterConfiguration(
-            name="f1", query_expression="level:ERROR"
-        )
+        fc = FilterConfiguration(name="f1", query_expression="level:ERROR")
         result = fc.parse_mql()
         assert result["level"] == "ERROR"
 
@@ -80,9 +70,7 @@ class TestFilterConfiguration:
     def test_to_dict_with_created_at(self):
         fc = FilterConfiguration(
             name="f1",
-            created_at=datetime(
-                2024, 1, 1, tzinfo=timezone.utc
-            ),
+            created_at=datetime(2024, 1, 1, tzinfo=timezone.utc),
         )
         d = fc.to_dict()
         assert d["created_at"] is not None
@@ -123,37 +111,25 @@ class TestUIState:
         assert d["version"] == 1
 
     def test_to_dict_with_filters(self):
-        fc = FilterConfiguration(
-            name="f1", levels=["INFO"]
-        )
+        fc = FilterConfiguration(name="f1", levels=["INFO"])
         state = UIState(filters=[fc])
         d = state.to_dict()
         assert len(d["filters"]) == 1
 
     def test_to_dict_with_last_updated(self):
-        state = UIState(
-            last_updated=datetime(
-                2024, 1, 1, tzinfo=timezone.utc
-            )
-        )
+        state = UIState(last_updated=datetime(2024, 1, 1, tzinfo=timezone.utc))
         d = state.to_dict()
         assert d["last_updated"] is not None
 
     def test_load_from_file_no_file(self):
-        with patch(
-            "mohflow.devui.paths.get_ui_state_path"
-        ) as mock_path:
+        with patch("mohflow.devui.paths.get_ui_state_path") as mock_path:
             mock_path.return_value = None
             state = UIState.load_from_file()
             assert state.theme == "auto"
 
     def test_load_from_file_missing_file(self, tmp_path):
-        with patch(
-            "mohflow.devui.paths.get_ui_state_path"
-        ) as mock_path:
-            mock_path.return_value = (
-                tmp_path / "nonexistent.json"
-            )
+        with patch("mohflow.devui.paths.get_ui_state_path") as mock_path:
+            mock_path.return_value = tmp_path / "nonexistent.json"
             state = UIState.load_from_file()
             assert state.theme == "auto"
 
@@ -168,9 +144,7 @@ class TestUIState:
                 }
             )
         )
-        with patch(
-            "mohflow.devui.paths.get_ui_state_path"
-        ) as mock_path:
+        with patch("mohflow.devui.paths.get_ui_state_path") as mock_path:
             mock_path.return_value = p
             state = UIState.load_from_file()
             assert state.theme == "dark"
@@ -179,18 +153,14 @@ class TestUIState:
     def test_load_from_file_invalid_json(self, tmp_path):
         p = tmp_path / "ui-state.json"
         p.write_text("not json")
-        with patch(
-            "mohflow.devui.paths.get_ui_state_path"
-        ) as mock_path:
+        with patch("mohflow.devui.paths.get_ui_state_path") as mock_path:
             mock_path.return_value = p
             state = UIState.load_from_file()
             assert state.theme == "auto"
 
     def test_save_to_file(self, tmp_path):
         p = tmp_path / "ui-state.json"
-        with patch(
-            "mohflow.devui.paths.get_ui_state_path"
-        ) as mock_path:
+        with patch("mohflow.devui.paths.get_ui_state_path") as mock_path:
             mock_path.return_value = p
             state = UIState(theme="dark")
             state.save_to_file()
@@ -199,21 +169,15 @@ class TestUIState:
             assert data["theme"] == "dark"
 
     def test_save_to_file_no_path(self):
-        with patch(
-            "mohflow.devui.paths.get_ui_state_path"
-        ) as mock_path:
+        with patch("mohflow.devui.paths.get_ui_state_path") as mock_path:
             mock_path.return_value = None
             state = UIState()
             state.save_to_file()  # Should not raise
 
     def test_save_to_file_io_error(self):
-        with patch(
-            "mohflow.devui.paths.get_ui_state_path"
-        ) as mock_path:
+        with patch("mohflow.devui.paths.get_ui_state_path") as mock_path:
             mock_path.return_value = MagicMock()
-            with patch(
-                "builtins.open", side_effect=IOError
-            ):
+            with patch("builtins.open", side_effect=IOError):
                 state = UIState()
                 state.save_to_file()  # Should not raise
 
@@ -233,9 +197,7 @@ class TestLogEvent:
 
     def test_to_dict(self):
         event = LogEvent(
-            timestamp=datetime(
-                2024, 1, 1, tzinfo=timezone.utc
-            ),
+            timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
             level="INFO",
             message="hello",
             service="svc1",

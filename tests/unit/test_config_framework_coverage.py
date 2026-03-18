@@ -46,7 +46,6 @@ from mohflow.framework_detection import (
     get_framework_summary,
 )
 
-
 # ---------------------------------------------------------------
 # Shared fixtures
 # ---------------------------------------------------------------
@@ -165,9 +164,7 @@ class TestAutoConfiguratorDetection:
         ac = self._make()
         assert ac._detect_environment_type() == "development"
 
-    @patch.dict(
-        os.environ, {"NODE_ENV": "development"}, clear=False
-    )
+    @patch.dict(os.environ, {"NODE_ENV": "development"}, clear=False)
     def test_detect_env_type_node_env_development(self):
         ac = self._make()
         assert ac._detect_environment_type() == "development"
@@ -187,9 +184,7 @@ class TestAutoConfiguratorDetection:
         ac = self._make()
         assert ac._detect_environment_type() == "production"
 
-    @patch.dict(
-        os.environ, {"NODE_ENV": "production"}, clear=False
-    )
+    @patch.dict(os.environ, {"NODE_ENV": "production"}, clear=False)
     def test_detect_env_type_node_env_production(self):
         ac = self._make()
         assert ac._detect_environment_type() == "production"
@@ -199,25 +194,19 @@ class TestAutoConfiguratorDetection:
         ac = self._make()
         assert ac._detect_environment_type() == "production"
 
-    @patch.dict(
-        os.environ, {"AWS_REGION": "us-east-1"}, clear=False
-    )
+    @patch.dict(os.environ, {"AWS_REGION": "us-east-1"}, clear=False)
     def test_detect_env_type_cloud_means_production(self):
         ac = self._make()
         assert ac._detect_environment_type() == "production"
 
     # -- _detect_cloud_provider --
 
-    @patch.dict(
-        os.environ, {"AWS_REGION": "us-east-1"}, clear=False
-    )
+    @patch.dict(os.environ, {"AWS_REGION": "us-east-1"}, clear=False)
     def test_detect_cloud_aws(self):
         ac = self._make()
         assert ac._detect_cloud_provider() == "aws"
 
-    @patch.dict(
-        os.environ, {"GCP_PROJECT": "my-proj"}, clear=False
-    )
+    @patch.dict(os.environ, {"GCP_PROJECT": "my-proj"}, clear=False)
     def test_detect_cloud_gcp(self):
         ac = self._make()
         assert ac._detect_cloud_provider() == "gcp"
@@ -275,17 +264,13 @@ class TestAutoConfiguratorDetection:
     @patch("os.path.exists", return_value=False)
     def test_detect_no_container_cgroup_not_found(self, _):
         ac = self._make()
-        with patch(
-            "builtins.open", side_effect=FileNotFoundError
-        ):
+        with patch("builtins.open", side_effect=FileNotFoundError):
             assert ac._detect_container_runtime() is None
 
     @patch("os.path.exists", return_value=False)
     def test_detect_no_container_cgroup_permission(self, _):
         ac = self._make()
-        with patch(
-            "builtins.open", side_effect=PermissionError
-        ):
+        with patch("builtins.open", side_effect=PermissionError):
             assert ac._detect_container_runtime() is None
 
     # -- _detect_orchestrator --
@@ -303,16 +288,13 @@ class TestAutoConfiguratorDetection:
     @patch("os.path.exists")
     def test_detect_k8s_via_namespace_file(self, mock_exists):
         mock_exists.side_effect = (
-            lambda p: p
-            == "/var/run/secrets/kubernetes.io/"
+            lambda p: p == "/var/run/secrets/kubernetes.io/"
             "serviceaccount/namespace"
         )
         ac = self._make()
         assert ac._detect_orchestrator() == "kubernetes"
 
-    @patch.dict(
-        os.environ, {"POD_NAME": "my-pod"}, clear=False
-    )
+    @patch.dict(os.environ, {"POD_NAME": "my-pod"}, clear=False)
     @patch("os.path.exists", return_value=False)
     def test_detect_k8s_via_k8s_env_vars(self, _):
         ac = self._make()
@@ -321,18 +303,14 @@ class TestAutoConfiguratorDetection:
     @patch("os.path.exists", return_value=False)
     @patch("subprocess.run")
     def test_detect_docker_swarm(self, mock_run, _):
-        mock_run.return_value = MagicMock(
-            returncode=0, stdout="active\n"
-        )
+        mock_run.return_value = MagicMock(returncode=0, stdout="active\n")
         ac = self._make()
         assert ac._detect_orchestrator() == "docker-swarm"
 
     @patch("os.path.exists", return_value=False)
     @patch("subprocess.run")
     def test_detect_swarm_inactive(self, mock_run, _):
-        mock_run.return_value = MagicMock(
-            returncode=0, stdout="inactive\n"
-        )
+        mock_run.return_value = MagicMock(returncode=0, stdout="inactive\n")
         ac = self._make()
         assert ac._detect_orchestrator() is None
 
@@ -346,9 +324,7 @@ class TestAutoConfiguratorDetection:
         assert ac._detect_orchestrator() is None
 
     @patch("os.path.exists", return_value=False)
-    @patch(
-        "subprocess.run", side_effect=FileNotFoundError
-    )
+    @patch("subprocess.run", side_effect=FileNotFoundError)
     def test_detect_orchestrator_no_docker(self, *_):
         ac = self._make()
         assert ac._detect_orchestrator() is None
@@ -432,9 +408,7 @@ class TestAutoConfiguratorDetection:
             {"AZURE_INSTANCE_ID": "az-i-1"},
             clear=False,
         ):
-            assert (
-                ac._detect_instance_id("azure") == "az-i-1"
-            )
+            assert ac._detect_instance_id("azure") == "az-i-1"
 
     def test_detect_instance_none(self):
         ac = self._make()
@@ -449,10 +423,7 @@ class TestAutoConfiguratorDetection:
             {"AWS_EXECUTION_ENV": "AWS_Lambda_python3.9"},
             clear=False,
         ):
-            assert (
-                ac._detect_runtime("aws")
-                == "AWS_Lambda_python3.9"
-            )
+            assert ac._detect_runtime("aws") == "AWS_Lambda_python3.9"
 
     def test_detect_runtime_aws_no_exec_env(self):
         ac = self._make()
@@ -538,39 +509,27 @@ class TestAutoConfiguratorDetection:
             "builtins.open",
             mock_open(read_data="prod-ns\n"),
         ):
-            assert (
-                ac._detect_namespace("kubernetes") == "prod-ns"
-            )
+            assert ac._detect_namespace("kubernetes") == "prod-ns"
 
     def test_detect_namespace_k8s_file_not_found(self):
         ac = self._make()
-        with patch(
-            "builtins.open", side_effect=FileNotFoundError
-        ):
+        with patch("builtins.open", side_effect=FileNotFoundError):
             with patch.dict(
                 os.environ,
                 {"POD_NAMESPACE": "fallback-ns"},
                 clear=False,
             ):
-                assert (
-                    ac._detect_namespace("kubernetes")
-                    == "fallback-ns"
-                )
+                assert ac._detect_namespace("kubernetes") == "fallback-ns"
 
     def test_detect_namespace_k8s_permission_error(self):
         ac = self._make()
-        with patch(
-            "builtins.open", side_effect=PermissionError
-        ):
+        with patch("builtins.open", side_effect=PermissionError):
             with patch.dict(
                 os.environ,
                 {"KUBERNETES_NAMESPACE": "env-ns"},
                 clear=False,
             ):
-                assert (
-                    ac._detect_namespace("kubernetes")
-                    == "env-ns"
-                )
+                assert ac._detect_namespace("kubernetes") == "env-ns"
 
     def test_detect_namespace_not_k8s(self):
         ac = self._make()
@@ -602,9 +561,7 @@ class TestAutoConfiguratorDetection:
         assert md["availability_zone"] == "us-east-1a"
         assert md["instance_type"] == "t3.micro"
 
-    @patch.dict(
-        os.environ, {"HOSTNAME": "container-id"}, clear=False
-    )
+    @patch.dict(os.environ, {"HOSTNAME": "container-id"}, clear=False)
     def test_collect_metadata_docker(self):
         ac = self._make()
         md = ac._collect_metadata(None, "docker", None)
@@ -622,9 +579,7 @@ class TestAutoConfiguratorDetection:
     )
     def test_collect_metadata_k8s(self):
         ac = self._make()
-        md = ac._collect_metadata(
-            None, None, "kubernetes"
-        )
+        md = ac._collect_metadata(None, None, "kubernetes")
         assert md["orchestrator"] == "kubernetes"
         assert md["pod_name"] == "my-pod"
         assert md["namespace"] == "default"
@@ -712,9 +667,7 @@ class TestAutoConfiguratorConfigMethods:
 
     def test_validate_configuration_true(self):
         ac = AutoConfigurator()
-        assert ac.validate_configuration(
-            {"service_name": "svc"}
-        )
+        assert ac.validate_configuration({"service_name": "svc"})
 
     def test_validate_configuration_false(self):
         ac = AutoConfigurator()
@@ -727,9 +680,7 @@ class TestAutoConfiguratorConfigMethods:
             cloud_provider="local",
         )
         ac._env_info = env
-        result = ac.apply_auto_configuration(
-            {"service_name": "svc"}
-        )
+        result = ac.apply_auto_configuration({"service_name": "svc"})
         assert result["environment"] == "development"
         assert result["service_name"] == "svc"
 
@@ -823,9 +774,7 @@ class TestAutoConfiguratorApplyMethods:
     ):
         """Production with existing context_enrichment."""
         ac = AutoConfigurator()
-        config: Dict[str, Any] = {
-            "context_enrichment": {"foo": "bar"}
-        }
+        config: Dict[str, Any] = {"context_enrichment": {"foo": "bar"}}
         ac._apply_environment_config(
             config, self._env(environment_type="production")
         )
@@ -835,9 +784,7 @@ class TestAutoConfiguratorApplyMethods:
     def test_apply_cloud_config_none(self):
         ac = AutoConfigurator()
         config: Dict[str, Any] = {}
-        ac._apply_cloud_config(
-            config, self._env(cloud_provider=None)
-        )
+        ac._apply_cloud_config(config, self._env(cloud_provider=None))
         assert "context_enrichment" not in config
 
     def test_apply_cloud_config_aws(self):
@@ -873,9 +820,7 @@ class TestAutoConfiguratorApplyMethods:
         ):
             ac._apply_cloud_config(config, env)
         assert (
-            config["context_enrichment"]["custom_fields"][
-                "cloud_provider"
-            ]
+            config["context_enrichment"]["custom_fields"]["cloud_provider"]
             == "gcp"
         )
 
@@ -893,18 +838,14 @@ class TestAutoConfiguratorApplyMethods:
         ):
             ac._apply_cloud_config(config, env)
         assert (
-            config["context_enrichment"]["custom_fields"][
-                "cloud_provider"
-            ]
+            config["context_enrichment"]["custom_fields"]["cloud_provider"]
             == "azure"
         )
 
     def test_apply_container_config_none(self):
         ac = AutoConfigurator()
         config: Dict[str, Any] = {}
-        ac._apply_container_config(
-            config, self._env(container_runtime=None)
-        )
+        ac._apply_container_config(config, self._env(container_runtime=None))
         assert "context_enrichment" not in config
 
     def test_apply_container_config_docker(self):
@@ -1020,9 +961,7 @@ class TestAutoConfiguratorAutoConfigure:
             "get_optimized_config",
             return_value={},
         ):
-            result = ac.auto_configure(
-                {"service_name": "svc"}
-            )
+            result = ac.auto_configure({"service_name": "svc"})
         assert result["environment"] == "development"
 
     def test_apply_framework_config_success(self):
@@ -1056,9 +995,7 @@ class TestAutoConfiguratorAutoConfigure:
         """Merge into existing context_enrichment."""
         ac = AutoConfigurator()
         config: Dict[str, Any] = {
-            "context_enrichment": {
-                "custom_fields": {"existing": "yes"}
-            }
+            "context_enrichment": {"custom_fields": {"existing": "yes"}}
         }
         env = EnvironmentInfo(
             environment_type="development",
@@ -1159,18 +1096,9 @@ class TestAutoConfiguratorMergeIntelligently:
     def test_context_enrichment_no_existing_cf(self):
         ac = AutoConfigurator()
         base = {"context_enrichment": {}}
-        fw = {
-            "context_enrichment": {
-                "custom_fields": {"new": True}
-            }
-        }
+        fw = {"context_enrichment": {"custom_fields": {"new": True}}}
         result = ac._merge_configs_intelligently(base, fw)
-        assert (
-            result["context_enrichment"]["custom_fields"][
-                "new"
-            ]
-            is True
-        )
+        assert result["context_enrichment"]["custom_fields"]["new"] is True
 
 
 class TestAutoConfiguratorIntelligentConfig:
@@ -1253,9 +1181,7 @@ class TestAutoConfiguratorIntelligentConfig:
             ac._framework_detector,
             "get_optimized_config",
             return_value={
-                "context_enrichment": {
-                    "custom_fields": {"existing": True}
-                }
+                "context_enrichment": {"custom_fields": {"existing": True}}
             },
         ), patch.object(
             ac._framework_detector,
@@ -1299,10 +1225,7 @@ class TestAutoConfiguratorFrameworkRecommendations:
             recs = ac.get_framework_recommendations()
         assert recs["detected_app_type"] == "web"
         assert len(recs["frameworks"]) == 1
-        assert (
-            recs["recommendations"]["formatter"]
-            == "structured"
-        )
+        assert recs["recommendations"]["formatter"] == "structured"
         assert len(recs["integration_tips"]) == 1
         assert len(recs["performance_notes"]) == 1
 
@@ -1326,9 +1249,7 @@ class TestAutoConfiguratorFrameworkRecommendations:
         ):
             recs = ac.get_framework_recommendations()
         assert recs["recommendations"]["formatter"] == "fast"
-        assert (
-            recs["recommendations"]["async_handlers"] is True
-        )
+        assert recs["recommendations"]["async_handlers"] is True
         # No integration_notes, so no tip added
         assert len(recs["integration_tips"]) == 0
 
@@ -1351,9 +1272,7 @@ class TestAutoConfiguratorFrameworkRecommendations:
             return_value=app,
         ):
             recs = ac.get_framework_recommendations()
-        assert (
-            recs["recommendations"]["async_handlers"] is True
-        )
+        assert recs["recommendations"]["async_handlers"] is True
 
     def test_no_special_type_recommendations(self):
         ac = AutoConfigurator()
@@ -1415,63 +1334,39 @@ class TestAutoConfiguratorEnvironmentSummary:
         assert summary["uses_async"] is True
         assert "fastapi" in summary["frameworks"]
         assert summary["capabilities"]["database"] is True
-        assert (
-            summary["capabilities"]["message_queue"] is False
-        )
+        assert summary["capabilities"]["message_queue"] is False
 
 
 class TestAutoConfigConvenienceFunctions:
     """Tests for module-level convenience functions."""
 
     def test_detect_environment_func(self):
-        with patch(
-            "mohflow.auto_config._auto_configurator"
-        ) as mock_ac:
-            mock_ac.detect_environment.return_value = (
-                EnvironmentInfo()
-            )
+        with patch("mohflow.auto_config._auto_configurator") as mock_ac:
+            mock_ac.detect_environment.return_value = EnvironmentInfo()
             result = detect_environment()
             assert result.environment_type == "development"
 
     def test_auto_configure_func(self):
-        with patch(
-            "mohflow.auto_config._auto_configurator"
-        ) as mock_ac:
-            mock_ac.auto_configure.return_value = {
-                "env": "dev"
-            }
+        with patch("mohflow.auto_config._auto_configurator") as mock_ac:
+            mock_ac.auto_configure.return_value = {"env": "dev"}
             result = auto_configure({"base": True})
             assert result == {"env": "dev"}
 
     def test_get_intelligent_config_func(self):
-        with patch(
-            "mohflow.auto_config._auto_configurator"
-        ) as mock_ac:
-            mock_ac.get_intelligent_config.return_value = {
-                "smart": True
-            }
-            result = get_intelligent_config(
-                {"base": True}, service_name="svc"
-            )
+        with patch("mohflow.auto_config._auto_configurator") as mock_ac:
+            mock_ac.get_intelligent_config.return_value = {"smart": True}
+            result = get_intelligent_config({"base": True}, service_name="svc")
             assert result == {"smart": True}
 
     def test_get_framework_recommendations_func(self):
-        with patch(
-            "mohflow.auto_config._auto_configurator"
-        ) as mock_ac:
-            mock_ac.get_framework_recommendations.return_value = (
-                {"recs": True}
-            )
+        with patch("mohflow.auto_config._auto_configurator") as mock_ac:
+            mock_ac.get_framework_recommendations.return_value = {"recs": True}
             result = get_framework_recommendations()
             assert result == {"recs": True}
 
     def test_get_environment_summary_func(self):
-        with patch(
-            "mohflow.auto_config._auto_configurator"
-        ) as mock_ac:
-            mock_ac.get_environment_summary.return_value = {
-                "summary": True
-            }
+        with patch("mohflow.auto_config._auto_configurator") as mock_ac:
+            mock_ac.get_environment_summary.return_value = {"summary": True}
             result = get_environment_summary()
             assert result == {"summary": True}
 
@@ -1499,9 +1394,7 @@ class TestConfigLoaderLoadSchema:
     def test_load_schema_file_not_found(self):
         loader = ConfigLoader()
         loader.schema_path = Path("/nonexistent/schema.json")
-        with pytest.raises(
-            ConfigurationError, match="schema not found"
-        ):
+        with pytest.raises(ConfigurationError, match="schema not found"):
             loader._load_schema()
 
     def test_load_schema_invalid_json(self):
@@ -1525,9 +1418,7 @@ class TestConfigLoaderLoadJsonConfig:
         assert loader._load_json_config() == {}
 
     def test_file_not_found(self, tmp_path):
-        loader = ConfigLoader(
-            config_file=str(tmp_path / "missing.json")
-        )
+        loader = ConfigLoader(config_file=str(tmp_path / "missing.json"))
         with pytest.raises(
             ConfigurationError,
             match="Configuration file not found",
@@ -1536,18 +1427,14 @@ class TestConfigLoaderLoadJsonConfig:
 
     def test_valid_json(self, tmp_path):
         cfg_file = tmp_path / "config.json"
-        cfg_file.write_text(
-            json.dumps({"service_name": "test"})
-        )
+        cfg_file.write_text(json.dumps({"service_name": "test"}))
         loader = ConfigLoader(config_file=str(cfg_file))
         result = loader._load_json_config()
         assert result == {"service_name": "test"}
 
     def test_valid_json_path_object(self, tmp_path):
         cfg_file = tmp_path / "config.json"
-        cfg_file.write_text(
-            json.dumps({"service_name": "test"})
-        )
+        cfg_file.write_text(json.dumps({"service_name": "test"}))
         loader = ConfigLoader(config_file=cfg_file)
         result = loader._load_json_config()
         assert result == {"service_name": "test"}
@@ -1596,9 +1483,7 @@ class TestConfigLoaderLoadFileConfig:
         loader = ConfigLoader()
         data = json.dumps({"key": "val"})
         with patch("os.path.exists", return_value=True):
-            with patch(
-                "builtins.open", mock_open(read_data=data)
-            ):
+            with patch("builtins.open", mock_open(read_data=data)):
                 result = loader._load_file_config("x.json")
         assert result == {"key": "val"}
 
@@ -1606,9 +1491,7 @@ class TestConfigLoaderLoadFileConfig:
         loader = ConfigLoader()
         data = json.dumps([1, 2])
         with patch("os.path.exists", return_value=True):
-            with patch(
-                "builtins.open", mock_open(read_data=data)
-            ):
+            with patch("builtins.open", mock_open(read_data=data)):
                 result = loader._load_file_config("x.json")
         assert result == {}
 
@@ -1619,9 +1502,7 @@ class TestConfigLoaderLoadFileConfig:
                 "builtins.open",
                 side_effect=FileNotFoundError,
             ):
-                assert (
-                    loader._load_file_config("x.json") == {}
-                )
+                assert loader._load_file_config("x.json") == {}
 
     def test_invalid_json_in_file(self):
         loader = ConfigLoader()
@@ -1630,9 +1511,7 @@ class TestConfigLoaderLoadFileConfig:
                 "builtins.open",
                 mock_open(read_data="bad json"),
             ):
-                assert (
-                    loader._load_file_config("x.json") == {}
-                )
+                assert loader._load_file_config("x.json") == {}
 
 
 class TestConfigLoaderLoadEnvConfig:
@@ -1682,9 +1561,7 @@ class TestConfigLoaderLoadEnvConfig:
             loader = ConfigLoader()
             config = loader._load_env_config()
         assert config["custom"]["nested"]["enabled"] is True
-        assert (
-            config["custom"]["nested"]["disabled"] is False
-        )
+        assert config["custom"]["nested"]["disabled"] is False
 
     def test_nested_env_vars_integer(self):
         env = {"MOHFLOW_HANDLER_BATCH_SIZE": "500"}
@@ -1698,10 +1575,7 @@ class TestConfigLoaderLoadEnvConfig:
         with patch.dict(os.environ, env, clear=True):
             loader = ConfigLoader()
             config = loader._load_env_config()
-        assert (
-            config["handler"]["name"]["value"]
-            == "my-handler"
-        )
+        assert config["handler"]["name"]["value"] == "my-handler"
 
     def test_nested_env_vars_non_dict_collision(self):
         """When a nested path hits a non-dict value,
@@ -1790,9 +1664,7 @@ class TestConfigLoaderValidateConfig:
             side_effect=ConfigurationError("wrapped"),
         ):
             with pytest.raises(ConfigurationError):
-                loader._validate_config(
-                    {"service_name": "svc"}
-                )
+                loader._validate_config({"service_name": "svc"})
 
 
 class TestConfigLoaderConvertValue:
@@ -1822,9 +1694,7 @@ class TestConfigLoaderNormalizeKey:
 
     def test_normalize(self):
         loader = ConfigLoader()
-        assert (
-            loader._normalize_key("SOME_KEY") == "some_key"
-        )
+        assert loader._normalize_key("SOME_KEY") == "some_key"
 
 
 class TestConfigLoaderValidateAgainstSchema:
@@ -1843,15 +1713,11 @@ class TestConfigLoaderValidateAgainstSchema:
 
     def test_missing_required(self):
         loader = ConfigLoader()
-        assert not loader.validate_against_schema(
-            {"log_level": "INFO"}
-        )
+        assert not loader.validate_against_schema({"log_level": "INFO"})
 
     def test_wrong_type_string(self):
         loader = ConfigLoader()
-        assert not loader.validate_against_schema(
-            {"service_name": 123}
-        )
+        assert not loader.validate_against_schema({"service_name": 123})
 
     def test_wrong_type_boolean(self):
         loader = ConfigLoader()
@@ -1892,9 +1758,7 @@ class TestConfigLoaderValidateAgainstSchema:
             "get_config_schema",
             side_effect=RuntimeError,
         ):
-            assert not loader.validate_against_schema(
-                {"service_name": "svc"}
-            )
+            assert not loader.validate_against_schema({"service_name": "svc"})
 
 
 class TestConfigLoaderHelpers:
@@ -1916,10 +1780,7 @@ class TestConfigLoaderHelpers:
             return_value={"key": "val"},
         ):
             assert loader.get_config_value("key") == "val"
-            assert (
-                loader.get_config_value("missing", "def")
-                == "def"
-            )
+            assert loader.get_config_value("missing", "def") == "def"
 
     def test_has_config_file_true(self, tmp_path):
         cfg = tmp_path / "config.json"
@@ -1928,9 +1789,7 @@ class TestConfigLoaderHelpers:
         assert loader.has_config_file() is True
 
     def test_has_config_file_false_missing(self):
-        loader = ConfigLoader(
-            config_file="/nonexistent/file.json"
-        )
+        loader = ConfigLoader(config_file="/nonexistent/file.json")
         assert loader.has_config_file() is False
 
     def test_has_config_file_false_none(self):
@@ -1960,16 +1819,12 @@ class TestConfigLoaderMergeConfigs:
 
     def test_empty_config_skipped(self):
         loader = ConfigLoader()
-        result = loader._merge_configs(
-            {"a": 1}, {}, {"b": 2}
-        )
+        result = loader._merge_configs({"a": 1}, {}, {"b": 2})
         assert result == {"a": 1, "b": 2}
 
     def test_none_config_skipped(self):
         loader = ConfigLoader()
-        result = loader._merge_configs(
-            {"a": 1}, None, {"b": 2}
-        )
+        result = loader._merge_configs({"a": 1}, None, {"b": 2})
         assert result == {"a": 1, "b": 2}
 
     def test_recursive_merge(self):
@@ -2012,9 +1867,7 @@ class TestConfigLoaderLoadConfig:
     def test_load_config_none_params_filtered(self):
         loader = ConfigLoader()
         with patch.dict(os.environ, {}, clear=True):
-            config = loader.load_config(
-                service_name="svc", extra=None
-            )
+            config = loader.load_config(service_name="svc", extra=None)
         assert "extra" not in config
 
 
@@ -2032,16 +1885,12 @@ class TestConfigLoaderCreateSampleConfig:
 
     def test_create_sample_error(self):
         loader = ConfigLoader()
-        with patch(
-            "builtins.open", side_effect=OSError("no perms")
-        ):
+        with patch("builtins.open", side_effect=OSError("no perms")):
             with pytest.raises(
                 ConfigurationError,
                 match="Failed to create",
             ):
-                loader.create_sample_config(
-                    "/bad/path/sample.json"
-                )
+                loader.create_sample_config("/bad/path/sample.json")
 
 
 class TestConfigLoaderConvenienceFunction:
@@ -2109,9 +1958,7 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"flask"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="2.3.0"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="2.3.0"):
             result = fd._detect_web_frameworks()
         assert len(result) == 1
         assert result[0].name == "flask"
@@ -2124,9 +1971,7 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"django"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="4.2"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="4.2"):
             result = fd._detect_web_frameworks()
         assert len(result) == 1
         assert result[0].name == "django"
@@ -2147,9 +1992,7 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"fastapi"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="0.100"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="0.100"):
             result = fd._detect_async_frameworks()
         assert len(result) == 1
         assert result[0].name == "fastapi"
@@ -2161,9 +2004,7 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"aiohttp"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="3.8"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="3.8"):
             result = fd._detect_async_frameworks()
         assert len(result) == 1
         assert result[0].name == "aiohttp"
@@ -2174,9 +2015,7 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"sanic"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="23.0"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="23.0"):
             result = fd._detect_async_frameworks()
         assert len(result) == 1
         assert result[0].name == "sanic"
@@ -2186,12 +2025,8 @@ class TestFrameworkDetectorDetection:
         with patch.object(
             fd,
             "_is_module_available",
-            side_effect=_mock_module_available(
-                {"flask_restful"}
-            ),
-        ), patch.object(
-            fd, "_get_module_version", return_value="0.3"
-        ):
+            side_effect=_mock_module_available({"flask_restful"}),
+        ), patch.object(fd, "_get_module_version", return_value="0.3"):
             result = fd._detect_api_frameworks()
         assert len(result) == 1
         assert result[0].name == "flask_restful"
@@ -2201,12 +2036,8 @@ class TestFrameworkDetectorDetection:
         with patch.object(
             fd,
             "_is_module_available",
-            side_effect=_mock_module_available(
-                {"rest_framework"}
-            ),
-        ), patch.object(
-            fd, "_get_module_version", return_value="3.14"
-        ):
+            side_effect=_mock_module_available({"rest_framework"}),
+        ), patch.object(fd, "_get_module_version", return_value="3.14"):
             result = fd._detect_api_frameworks()
         assert len(result) == 1
         assert result[0].name == "django_rest_framework"
@@ -2217,9 +2048,7 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"celery"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="5.3"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="5.3"):
             result = fd._detect_task_frameworks()
         assert len(result) == 1
         assert result[0].name == "celery"
@@ -2230,9 +2059,7 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"rq"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="1.0"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="1.0"):
             result = fd._detect_task_frameworks()
         assert len(result) == 1
         assert result[0].name == "rq"
@@ -2242,12 +2069,8 @@ class TestFrameworkDetectorDetection:
         with patch.object(
             fd,
             "_is_module_available",
-            side_effect=_mock_module_available(
-                {"sqlalchemy"}
-            ),
-        ), patch.object(
-            fd, "_get_module_version", return_value="2.0"
-        ):
+            side_effect=_mock_module_available({"sqlalchemy"}),
+        ), patch.object(fd, "_get_module_version", return_value="2.0"):
             result = fd._detect_database_frameworks()
         assert len(result) == 1
         assert result[0].name == "sqlalchemy"
@@ -2268,9 +2091,7 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"pytest"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="7.0"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="7.0"):
             result = fd._detect_testing_frameworks()
         assert len(result) == 1
         assert result[0].name == "pytest"
@@ -2282,9 +2103,7 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"gunicorn"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="21.0"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="21.0"):
             result = fd._detect_production_frameworks()
         assert any(f.name == "gunicorn" for f in result)
 
@@ -2294,14 +2113,10 @@ class TestFrameworkDetectorDetection:
             fd,
             "_is_module_available",
             side_effect=_mock_module_available({"uvicorn"}),
-        ), patch.object(
-            fd, "_get_module_version", return_value="0.20"
-        ):
+        ), patch.object(fd, "_get_module_version", return_value="0.20"):
             result = fd._detect_production_frameworks()
         assert any(f.name == "uvicorn" for f in result)
-        uvi = [
-            f for f in result if f.name == "uvicorn"
-        ][0]
+        uvi = [f for f in result if f.name == "uvicorn"][0]
         assert uvi.is_async is True
 
 
@@ -2427,10 +2242,7 @@ class TestFrameworkDetectorDeploymentType:
     )
     def test_serverless_lambda(self):
         fd = FrameworkDetector()
-        assert (
-            fd._determine_deployment_type([], "api")
-            == "serverless"
-        )
+        assert fd._determine_deployment_type([], "api") == "serverless"
 
     @patch.dict(
         os.environ,
@@ -2439,10 +2251,7 @@ class TestFrameworkDetectorDeploymentType:
     )
     def test_serverless_azure_functions(self):
         fd = FrameworkDetector()
-        assert (
-            fd._determine_deployment_type([], "web")
-            == "serverless"
-        )
+        assert fd._determine_deployment_type([], "web") == "serverless"
 
     @patch.dict(
         os.environ,
@@ -2456,10 +2265,7 @@ class TestFrameworkDetectorDeploymentType:
             "_is_module_available",
             return_value=False,
         ):
-            assert (
-                fd._determine_deployment_type([], "web")
-                == "microservice"
-            )
+            assert fd._determine_deployment_type([], "web") == "microservice"
 
     def test_microservice_fastapi(self):
         fd = FrameworkDetector()
@@ -2469,10 +2275,7 @@ class TestFrameworkDetectorDeploymentType:
             "_is_module_available",
             return_value=False,
         ):
-            assert (
-                fd._determine_deployment_type(fws, "web")
-                == "microservice"
-            )
+            assert fd._determine_deployment_type(fws, "web") == "microservice"
 
     def test_microservice_api_type(self):
         fd = FrameworkDetector()
@@ -2481,10 +2284,7 @@ class TestFrameworkDetectorDeploymentType:
             "_is_module_available",
             return_value=False,
         ):
-            assert (
-                fd._determine_deployment_type([], "api")
-                == "microservice"
-            )
+            assert fd._determine_deployment_type([], "api") == "microservice"
 
     def test_microservice_worker_type(self):
         fd = FrameworkDetector()
@@ -2494,8 +2294,7 @@ class TestFrameworkDetectorDeploymentType:
             return_value=False,
         ):
             assert (
-                fd._determine_deployment_type([], "worker")
-                == "microservice"
+                fd._determine_deployment_type([], "worker") == "microservice"
             )
 
     def test_monolith_default(self):
@@ -2505,10 +2304,7 @@ class TestFrameworkDetectorDeploymentType:
             "_is_module_available",
             return_value=False,
         ):
-            assert (
-                fd._determine_deployment_type([], "web")
-                == "monolith"
-            )
+            assert fd._determine_deployment_type([], "web") == "monolith"
 
 
 class TestFrameworkDetectorDependencyDetection:
@@ -2519,9 +2315,7 @@ class TestFrameworkDetectorDependencyDetection:
         with patch.object(
             fd,
             "_is_module_available",
-            side_effect=_mock_module_available(
-                {"sqlalchemy"}
-            ),
+            side_effect=_mock_module_available({"sqlalchemy"}),
         ):
             assert fd._detect_database_usage() is True
 
@@ -2600,9 +2394,7 @@ class TestFrameworkDetectorCliPatterns:
         ):
             mock_main = MagicMock()
             mock_main.__file__ = "/app/main.py"
-            with patch.dict(
-                "sys.modules", {"__main__": mock_main}
-            ):
+            with patch.dict("sys.modules", {"__main__": mock_main}):
                 assert fd._detect_cli_patterns() is True
 
     def test_click_detected(self):
@@ -2613,9 +2405,7 @@ class TestFrameworkDetectorCliPatterns:
         ):
             mock_main = MagicMock()
             mock_main.__file__ = "/app/main.py"
-            with patch.dict(
-                "sys.modules", {"__main__": mock_main}
-            ):
+            with patch.dict("sys.modules", {"__main__": mock_main}):
                 assert fd._detect_cli_patterns() is True
 
     def test_no_cli_patterns(self):
@@ -2626,17 +2416,13 @@ class TestFrameworkDetectorCliPatterns:
         ):
             mock_main = MagicMock()
             mock_main.__file__ = "/app/main.py"
-            with patch.dict(
-                "sys.modules", {"__main__": mock_main}
-            ):
+            with patch.dict("sys.modules", {"__main__": mock_main}):
                 assert fd._detect_cli_patterns() is False
 
     def test_no_main_file(self):
         fd = FrameworkDetector()
         mock_main = MagicMock(spec=[])
-        with patch.dict(
-            "sys.modules", {"__main__": mock_main}
-        ):
+        with patch.dict("sys.modules", {"__main__": mock_main}):
             assert fd._detect_cli_patterns() is False
 
     def test_exception_handling(self):
@@ -2647,9 +2433,7 @@ class TestFrameworkDetectorCliPatterns:
         ):
             mock_main = MagicMock()
             mock_main.__file__ = "/app/main.py"
-            with patch.dict(
-                "sys.modules", {"__main__": mock_main}
-            ):
+            with patch.dict("sys.modules", {"__main__": mock_main}):
                 assert fd._detect_cli_patterns() is False
 
 
@@ -2709,18 +2493,14 @@ class TestFrameworkDetectorPerformanceConfig:
 
     def test_microservice_config(self):
         fd = FrameworkDetector()
-        ai = ApplicationInfo(
-            deployment_type="microservice"
-        )
+        ai = ApplicationInfo(deployment_type="microservice")
         config = fd._get_performance_config(ai)
         assert config["formatter_type"] == "production"
         assert config["async_handlers"] is True
 
     def test_no_special_config(self):
         fd = FrameworkDetector()
-        ai = ApplicationInfo(
-            uses_async=False, deployment_type="monolith"
-        )
+        ai = ApplicationInfo(uses_async=False, deployment_type="monolith")
         config = fd._get_performance_config(ai)
         assert config == {}
 
@@ -2740,18 +2520,11 @@ class TestFrameworkDetectorIntegrationConfig:
         ai = ApplicationInfo(has_external_apis=True)
         config = fd._get_integration_config(ai)
         assert config["enable_context_enrichment"] is True
-        assert (
-            config["context_enrichment"][
-                "include_request_id"
-            ]
-            is True
-        )
+        assert config["context_enrichment"]["include_request_id"] is True
 
     def test_both_db_and_api(self):
         fd = FrameworkDetector()
-        ai = ApplicationInfo(
-            has_database=True, has_external_apis=True
-        )
+        ai = ApplicationInfo(has_database=True, has_external_apis=True)
         config = fd._get_integration_config(ai)
         ce = config["context_enrichment"]
         assert ce["custom_fields"]["has_database"] is True
@@ -2774,12 +2547,7 @@ class TestFrameworkDetectorModuleUtils:
 
     def test_is_module_available_false(self):
         fd = FrameworkDetector()
-        assert (
-            fd._is_module_available(
-                "nonexistent_module_xyz"
-            )
-            is False
-        )
+        assert fd._is_module_available("nonexistent_module_xyz") is False
 
     def test_get_module_version_with_version(self):
         fd = FrameworkDetector()
@@ -2909,9 +2677,7 @@ class TestFrameworkDetectorGetFrameworkSummary:
         assert summary["app_type"] == "web"
         assert summary["uses_async"] is True
         assert len(summary["frameworks"]) == 1
-        assert (
-            summary["capabilities"]["database"] is True
-        )
+        assert summary["capabilities"]["database"] is True
         assert summary["capabilities"]["cache"] is False
 
 
@@ -2925,17 +2691,13 @@ class TestFrameworkDetectionConvenienceFunctions:
             mock_fd.detect_frameworks.return_value = []
             result = detect_frameworks(force_refresh=True)
             assert result == []
-            mock_fd.detect_frameworks.assert_called_once_with(
-                True
-            )
+            mock_fd.detect_frameworks.assert_called_once_with(True)
 
     def test_detect_application_type_func(self):
         with patch(
             "mohflow.framework_detection._framework_detector"
         ) as mock_fd:
-            mock_fd.detect_application_type.return_value = (
-                ApplicationInfo()
-            )
+            mock_fd.detect_application_type.return_value = ApplicationInfo()
             result = detect_application_type()
             assert result.app_type == "unknown"
 
@@ -2943,9 +2705,7 @@ class TestFrameworkDetectionConvenienceFunctions:
         with patch(
             "mohflow.framework_detection._framework_detector"
         ) as mock_fd:
-            mock_fd.get_optimized_config.return_value = {
-                "key": "val"
-            }
+            mock_fd.get_optimized_config.return_value = {"key": "val"}
             result = get_framework_optimized_config()
             assert result == {"key": "val"}
 
@@ -2953,8 +2713,6 @@ class TestFrameworkDetectionConvenienceFunctions:
         with patch(
             "mohflow.framework_detection._framework_detector"
         ) as mock_fd:
-            mock_fd.get_framework_summary.return_value = {
-                "summary": True
-            }
+            mock_fd.get_framework_summary.return_value = {"summary": True}
             result = get_framework_summary()
             assert result == {"summary": True}

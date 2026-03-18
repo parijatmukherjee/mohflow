@@ -886,7 +886,9 @@ class TestExportPrometheusMetrics:
         # With no labels the metric line should not have braces
         lines = output.strip().split("\n")
         metric_lines = [
-            ln for ln in lines if not ln.startswith("#") and "simple_total" in ln
+            ln
+            for ln in lines
+            if not ln.startswith("#") and "simple_total" in ln
         ]
         assert len(metric_lines) == 1
         # Should look like "simple_total 1 <timestamp>"

@@ -117,9 +117,7 @@ class TestContextEnricher:
         assert result["env"] == "prod"
 
     def test_enrich_with_request_context(self):
-        ctx = RequestContext(
-            request_id="r1", operation_name="test"
-        )
+        ctx = RequestContext(request_id="r1", operation_name="test")
         set_request_context(ctx)
         enricher = ContextEnricher(
             include_system_info=False,
@@ -137,9 +135,7 @@ class TestContextEnricher:
             include_global_context=False,
             include_request_context=False,
         )
-        enricher.add_custom_enricher(
-            "custom_val", lambda: "hello"
-        )
+        enricher.add_custom_enricher("custom_val", lambda: "hello")
         result = enricher.enrich_dict({})
         assert result["custom_val"] == "hello"
 
@@ -150,9 +146,7 @@ class TestContextEnricher:
             include_global_context=False,
             include_request_context=False,
         )
-        enricher.add_custom_enricher(
-            "skip_me", lambda: None
-        )
+        enricher.add_custom_enricher("skip_me", lambda: None)
         result = enricher.enrich_dict({})
         assert "skip_me" not in result
 
@@ -214,9 +208,7 @@ class TestContextFunctions:
         assert get_global_context() == {}
 
     def test_update_request_context(self):
-        ctx = RequestContext(
-            request_id="r1", custom_fields={"a": 1}
-        )
+        ctx = RequestContext(request_id="r1", custom_fields={"a": 1})
         set_request_context(ctx)
         update_request_context(b=2)
         updated = get_request_context()
@@ -229,17 +221,13 @@ class TestContextFunctions:
 
 class TestRequestContextManager:
     def test_basic_usage(self):
-        with RequestContextManager(
-            request_id="r1"
-        ) as ctx:
+        with RequestContextManager(request_id="r1") as ctx:
             assert ctx.request_id == "r1"
             assert get_request_context() is ctx
         assert get_request_context() is None
 
     def test_auto_correlation_id(self):
-        with RequestContextManager(
-            request_id="r1"
-        ) as ctx:
+        with RequestContextManager(request_id="r1") as ctx:
             assert ctx.correlation_id is not None
 
     def test_explicit_correlation_id(self):
@@ -250,13 +238,9 @@ class TestRequestContextManager:
             assert ctx.correlation_id == "my-corr-id"
 
     def test_nested_contexts(self):
-        with RequestContextManager(
-            request_id="outer"
-        ) as outer:
+        with RequestContextManager(request_id="outer") as outer:
             assert get_request_context() is outer
-            with RequestContextManager(
-                request_id="inner"
-            ) as inner:
+            with RequestContextManager(request_id="inner") as inner:
                 assert get_request_context() is inner
             assert get_request_context() is outer
 
@@ -342,9 +326,7 @@ class TestWithRequestContext:
         assert result == "my_operation"
 
     def test_decorator_custom_fields(self):
-        @with_request_context(
-            "r1", custom_key="custom_val"
-        )
+        @with_request_context("r1", custom_key="custom_val")
         def func_with_custom():
             ctx = get_request_context()
             return ctx.custom_fields.get("custom_key")
@@ -355,9 +337,7 @@ class TestWithRequestContext:
 
 class TestWithRequestContextDecorator:
     def test_basic(self):
-        @with_request_context_decorator(
-            request_id="r1"
-        )
+        @with_request_context_decorator(request_id="r1")
         def my_func():
             return get_request_context().request_id
 
@@ -371,9 +351,7 @@ class TestWithRequestContextDecorator:
         assert auto_named() == "auto_named"
 
     def test_custom_fields(self):
-        @with_request_context_decorator(
-            user_id="u1", custom="val"
-        )
+        @with_request_context_decorator(user_id="u1", custom="val")
         def with_custom():
             ctx = get_request_context()
             return (

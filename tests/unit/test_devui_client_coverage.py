@@ -13,9 +13,7 @@ class TestMohnitorForwardingHandler:
             MohnitorForwardingHandler,
             "_sender_loop",
         ):
-            handler = MohnitorForwardingHandler(
-                service="test"
-            )
+            handler = MohnitorForwardingHandler(service="test")
             assert handler.service == "test"
             assert handler.hub_host == "127.0.0.1"
             assert handler.hub_port == 17361
@@ -27,9 +25,7 @@ class TestMohnitorForwardingHandler:
             MohnitorForwardingHandler,
             "_sender_loop",
         ):
-            handler = MohnitorForwardingHandler(
-                service="test"
-            )
+            handler = MohnitorForwardingHandler(service="test")
             record = logging.LogRecord(
                 name="test",
                 level=logging.INFO,
@@ -48,9 +44,7 @@ class TestMohnitorForwardingHandler:
             MohnitorForwardingHandler,
             "_sender_loop",
         ):
-            handler = MohnitorForwardingHandler(
-                service="test", buffer_size=1
-            )
+            handler = MohnitorForwardingHandler(service="test", buffer_size=1)
             record = logging.LogRecord(
                 name="test",
                 level=logging.INFO,
@@ -70,9 +64,7 @@ class TestMohnitorForwardingHandler:
             MohnitorForwardingHandler,
             "_sender_loop",
         ):
-            handler = MohnitorForwardingHandler(
-                service="test"
-            )
+            handler = MohnitorForwardingHandler(service="test")
             # Break LogEvent creation
             with patch(
                 "mohflow.devui.client.LogEvent",
@@ -95,9 +87,7 @@ class TestMohnitorForwardingHandler:
             MohnitorForwardingHandler,
             "_sender_loop",
         ):
-            handler = MohnitorForwardingHandler(
-                service="test"
-            )
+            handler = MohnitorForwardingHandler(service="test")
             handler.should_stop = True
             handler.close()
             assert handler.should_stop is True
@@ -107,12 +97,8 @@ class TestMohnitorForwardingHandler:
             MohnitorForwardingHandler,
             "_sender_loop",
         ):
-            handler = MohnitorForwardingHandler(
-                service="test"
-            )
+            handler = MohnitorForwardingHandler(service="test")
         # Now test the actual _sender_loop
-        with patch(
-            "mohflow.devui.client.websockets", None
-        ):
+        with patch("mohflow.devui.client.websockets", None):
             handler._sender_loop()
         handler.should_stop = True

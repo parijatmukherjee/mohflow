@@ -288,8 +288,7 @@ class TestHubWebSocket:
     def _setup_hub(self):
         with patch("mohflow.devui.hub.asyncio.create_task"):
             with patch(
-                "mohflow.devui.hub.memory_optimizer"
-                ".optimize_buffer_size",
+                "mohflow.devui.hub.memory_optimizer" ".optimize_buffer_size",
                 return_value=50000,
             ):
                 from mohflow.devui.hub import MohnitorHub
@@ -315,9 +314,7 @@ class TestHubWebSocket:
 
         client = TestClient(self.hub.app)
 
-        with client.websocket_connect(
-            "/ws?service=my-svc"
-        ) as ws:
+        with client.websocket_connect("/ws?service=my-svc") as ws:
             # Connection should be registered
             assert len(self.hub.connections) == 1
             conn_id = list(self.hub.connections.keys())[0]
@@ -332,8 +329,7 @@ class TestHubWebSocket:
         """Non-localhost hub requires token for client connections."""
         with patch("mohflow.devui.hub.asyncio.create_task"):
             with patch(
-                "mohflow.devui.hub.memory_optimizer"
-                ".optimize_buffer_size",
+                "mohflow.devui.hub.memory_optimizer" ".optimize_buffer_size",
                 return_value=50000,
             ):
                 from mohflow.devui.hub import MohnitorHub
@@ -345,9 +341,7 @@ class TestHubWebSocket:
         client = TestClient(remote_hub.app)
 
         # Connecting without correct token should close with 1008
-        with client.websocket_connect(
-            "/ws?service=svc&token=wrong"
-        ) as ws:
+        with client.websocket_connect("/ws?service=svc&token=wrong") as ws:
             pass  # server closes it
 
     @pytest.mark.asyncio
@@ -355,8 +349,7 @@ class TestHubWebSocket:
         """Non-localhost hub accepts connection with correct token."""
         with patch("mohflow.devui.hub.asyncio.create_task"):
             with patch(
-                "mohflow.devui.hub.memory_optimizer"
-                ".optimize_buffer_size",
+                "mohflow.devui.hub.memory_optimizer" ".optimize_buffer_size",
                 return_value=50000,
             ):
                 from mohflow.devui.hub import MohnitorHub
@@ -378,22 +371,16 @@ class TestHubWebSocket:
         from starlette.testclient import TestClient
 
         client = TestClient(self.hub.app)
-        with client.websocket_connect(
-            "/ws?service=my-svc"
-        ) as ws:
+        with client.websocket_connect("/ws?service=my-svc") as ws:
             conn_id = list(self.hub.connections.keys())[0]
-            old_last_seen = self.hub.connections[
-                conn_id
-            ].last_seen
+            old_last_seen = self.hub.connections[conn_id].last_seen
 
             ws.send_text(json.dumps({"type": "heartbeat"}))
             # Give handler time
             import time
 
             time.sleep(0.05)
-            new_last_seen = self.hub.connections[
-                conn_id
-            ].last_seen
+            new_last_seen = self.hub.connections[conn_id].last_seen
             assert new_last_seen >= old_last_seen
 
     @pytest.mark.asyncio
@@ -405,13 +392,9 @@ class TestHubWebSocket:
         client = TestClient(self.hub.app)
         event_dict = _make_log_event().to_dict()
 
-        with client.websocket_connect(
-            "/ws?service=svc"
-        ) as ws:
+        with client.websocket_connect("/ws?service=svc") as ws:
             ws.send_text(
-                json.dumps(
-                    {"type": "log_event", "payload": event_dict}
-                )
+                json.dumps({"type": "log_event", "payload": event_dict})
             )
             import time
 
@@ -428,13 +411,9 @@ class TestHubWebSocket:
         client = TestClient(self.hub.app)
         event_dict = _make_log_event().to_dict()
 
-        with client.websocket_connect(
-            "/ws?service=svc"
-        ) as ws:
+        with client.websocket_connect("/ws?service=svc") as ws:
             ws.send_text(
-                json.dumps(
-                    {"type": "log_event", "payload": event_dict}
-                )
+                json.dumps({"type": "log_event", "payload": event_dict})
             )
             import time
 
@@ -456,13 +435,9 @@ class TestHubWebSocket:
         client = TestClient(self.hub.app)
         event_dict = _make_log_event(message="new").to_dict()
 
-        with client.websocket_connect(
-            "/ws?service=svc"
-        ) as ws:
+        with client.websocket_connect("/ws?service=svc") as ws:
             ws.send_text(
-                json.dumps(
-                    {"type": "log_event", "payload": event_dict}
-                )
+                json.dumps({"type": "log_event", "payload": event_dict})
             )
             import time
 
@@ -476,9 +451,7 @@ class TestHubWebSocket:
         from starlette.testclient import TestClient
 
         client = TestClient(self.hub.app)
-        with client.websocket_connect(
-            "/ws?service=svc"
-        ) as ws:
+        with client.websocket_connect("/ws?service=svc") as ws:
             ws.send_text("not-json!")
             import time
 
@@ -537,21 +510,15 @@ class TestHubWebSocket:
             assert "system_stats" in types
 
             # Now request logs with get_logs
-            ws.send_text(
-                json.dumps({"type": "get_logs", "filters": {}})
-            )
+            ws.send_text(json.dumps({"type": "get_logs", "filters": {}}))
             resp = json.loads(ws.receive_text())
             assert resp["type"] == "log_event"
 
     @pytest.mark.asyncio
     async def test_ws_ui_get_logs_service_filter(self):
         """UI get_logs respects service filter."""
-        self.hub.event_buffer.append(
-            _make_log_event(service="api")
-        )
-        self.hub.event_buffer.append(
-            _make_log_event(service="worker")
-        )
+        self.hub.event_buffer.append(_make_log_event(service="api"))
+        self.hub.event_buffer.append(_make_log_event(service="worker"))
 
         from starlette.testclient import TestClient
 
@@ -575,12 +542,8 @@ class TestHubWebSocket:
     @pytest.mark.asyncio
     async def test_ws_ui_get_logs_level_filter(self):
         """UI get_logs respects level filter."""
-        self.hub.event_buffer.append(
-            _make_log_event(level="ERROR")
-        )
-        self.hub.event_buffer.append(
-            _make_log_event(level="INFO")
-        )
+        self.hub.event_buffer.append(_make_log_event(level="ERROR"))
+        self.hub.event_buffer.append(_make_log_event(level="INFO"))
 
         from starlette.testclient import TestClient
 
@@ -606,9 +569,7 @@ class TestHubWebSocket:
         self.hub.event_buffer.append(
             _make_log_event(message="payment processed")
         )
-        self.hub.event_buffer.append(
-            _make_log_event(message="user login")
-        )
+        self.hub.event_buffer.append(_make_log_event(message="user login"))
 
         from starlette.testclient import TestClient
 
@@ -655,8 +616,7 @@ class TestHubBroadcast:
     def _setup_hub(self):
         with patch("mohflow.devui.hub.asyncio.create_task"):
             with patch(
-                "mohflow.devui.hub.memory_optimizer"
-                ".optimize_buffer_size",
+                "mohflow.devui.hub.memory_optimizer" ".optimize_buffer_size",
                 return_value=50000,
             ):
                 from mohflow.devui.hub import MohnitorHub
@@ -676,9 +636,7 @@ class TestHubBroadcast:
         ws2 = AsyncMock()
         self.hub.ui_websockets = {ws1, ws2}
 
-        await self.hub._broadcast_to_ui(
-            {"type": "log_event", "payload": {}}
-        )
+        await self.hub._broadcast_to_ui({"type": "log_event", "payload": {}})
 
         ws1.send_text.assert_called_once()
         ws2.send_text.assert_called_once()
@@ -711,9 +669,7 @@ class TestHubBroadcast:
     async def test_send_initial_ui_data_with_events(self):
         """Initial UI data sends recent events + system_stats."""
         for i in range(5):
-            self.hub.event_buffer.append(
-                _make_log_event(message=f"msg-{i}")
-            )
+            self.hub.event_buffer.append(_make_log_event(message=f"msg-{i}"))
 
         ws = AsyncMock()
         await self.hub._send_initial_ui_data(ws)
@@ -776,8 +732,7 @@ class TestHubDescriptorAndRun:
     def _setup_hub(self):
         with patch("mohflow.devui.hub.asyncio.create_task"):
             with patch(
-                "mohflow.devui.hub.memory_optimizer"
-                ".optimize_buffer_size",
+                "mohflow.devui.hub.memory_optimizer" ".optimize_buffer_size",
                 return_value=50000,
             ):
                 from mohflow.devui.hub import MohnitorHub
@@ -847,8 +802,7 @@ class TestHandleClientMessage:
     def _setup_hub(self):
         with patch("mohflow.devui.hub.asyncio.create_task"):
             with patch(
-                "mohflow.devui.hub.memory_optimizer"
-                ".optimize_buffer_size",
+                "mohflow.devui.hub.memory_optimizer" ".optimize_buffer_size",
                 return_value=50000,
             ):
                 from mohflow.devui.hub import MohnitorHub
@@ -876,9 +830,7 @@ class TestHandleClientMessage:
         self.hub.connections["c1"] = conn
 
         event_dict = _make_log_event().to_dict()
-        msg = json.dumps(
-            {"type": "log_event", "payload": event_dict}
-        )
+        msg = json.dumps({"type": "log_event", "payload": event_dict})
         # First call populates cache
         await self.hub._handle_client_message("c1", msg)
         # Second call should use cache
@@ -909,9 +861,7 @@ class TestHandleClientMessage:
     @pytest.mark.asyncio
     async def test_invalid_json_message(self, capsys):
         """Invalid JSON in client message logs error."""
-        await self.hub._handle_client_message(
-            "c1", "not-valid-json"
-        )
+        await self.hub._handle_client_message("c1", "not-valid-json")
         captured = capsys.readouterr()
         assert "Error handling client message" in captured.out
 
@@ -924,9 +874,7 @@ class TestHandleClientMessage:
         self.hub.event_buffer.append(_make_log_event())
 
         event_dict = _make_log_event(message="new").to_dict()
-        msg = json.dumps(
-            {"type": "log_event", "payload": event_dict}
-        )
+        msg = json.dumps({"type": "log_event", "payload": event_dict})
         await self.hub._handle_client_message("c1", msg)
 
         assert self.hub.dropped_events == 1
@@ -942,8 +890,7 @@ class TestHandleUIMessage:
     def _setup_hub(self):
         with patch("mohflow.devui.hub.asyncio.create_task"):
             with patch(
-                "mohflow.devui.hub.memory_optimizer"
-                ".optimize_buffer_size",
+                "mohflow.devui.hub.memory_optimizer" ".optimize_buffer_size",
                 return_value=50000,
             ):
                 from mohflow.devui.hub import MohnitorHub
@@ -957,18 +904,14 @@ class TestHandleUIMessage:
 
         await self.hub._handle_ui_message(
             ws,
-            json.dumps(
-                {"type": "get_logs", "filters": {"level": "INFO"}}
-            ),
+            json.dumps({"type": "get_logs", "filters": {"level": "INFO"}}),
         )
         ws.send_text.assert_called()
 
     @pytest.mark.asyncio
     async def test_ping_returns_pong(self):
         ws = AsyncMock()
-        await self.hub._handle_ui_message(
-            ws, json.dumps({"type": "ping"})
-        )
+        await self.hub._handle_ui_message(ws, json.dumps({"type": "ping"}))
         ws.send_text.assert_called_once()
         msg = json.loads(ws.send_text.call_args[0][0])
         assert msg["type"] == "pong"
@@ -976,9 +919,7 @@ class TestHandleUIMessage:
     @pytest.mark.asyncio
     async def test_unknown_type_no_error(self):
         ws = AsyncMock()
-        await self.hub._handle_ui_message(
-            ws, json.dumps({"type": "unknown"})
-        )
+        await self.hub._handle_ui_message(ws, json.dumps({"type": "unknown"}))
         ws.send_text.assert_not_called()
 
     @pytest.mark.asyncio
@@ -1001,9 +942,7 @@ class TestMohflowCLICoverage:
         self.cli = MohflowCLI()
 
     # -- load_config_from_file ------------------------------------
-    def test_load_config_success_with_exit_on_error(
-        self, tmp_path, capsys
-    ):
+    def test_load_config_success_with_exit_on_error(self, tmp_path, capsys):
         """Successful config load prints confirmation."""
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(
@@ -1041,9 +980,7 @@ class TestMohflowCLICoverage:
                 "/nonexistent/config.json", exit_on_error=False
             )
 
-    def test_load_config_invalid_json_exit(
-        self, tmp_path, capsys
-    ):
+    def test_load_config_invalid_json_exit(self, tmp_path, capsys):
         """Invalid JSON with exit_on_error calls sys.exit."""
         cfg_path = tmp_path / "bad.json"
         cfg_path.write_text("{bad json")
@@ -1059,9 +996,7 @@ class TestMohflowCLICoverage:
         cfg_path.write_text("{bad json")
 
         with pytest.raises(json.JSONDecodeError):
-            self.cli.load_config_from_file(
-                str(cfg_path), exit_on_error=False
-            )
+            self.cli.load_config_from_file(str(cfg_path), exit_on_error=False)
 
     # -- merge_config ---------------------------------------------
     def test_merge_config_cli_overrides(self):
@@ -1135,9 +1070,7 @@ class TestMohflowCLICoverage:
 
     def test_validate_empty_service_name(self, capsys):
         """Validation fails with empty service_name."""
-        result = self.cli.validate_configuration(
-            {"service_name": ""}
-        )
+        result = self.cli.validate_configuration({"service_name": ""})
         assert result is False
 
     def test_validate_file_logging_no_path(self, capsys):
@@ -1181,9 +1114,7 @@ class TestMohflowCLICoverage:
         """validate_config with valid file returns True."""
         cfg = tmp_path / "config.json"
         cfg.write_text(
-            json.dumps(
-                {"service_name": "svc", "log_level": "INFO"}
-            )
+            json.dumps({"service_name": "svc", "log_level": "INFO"})
         )
         result = self.cli.validate_config(str(cfg))
         assert result is True
@@ -1287,25 +1218,19 @@ class TestMohflowCLICoverage:
     def test_handle_log_valid(self):
         """'log info message' logs at info level."""
         logger = Mock()
-        self.cli._handle_log_command(
-            'log info "hello world"', logger
-        )
+        self.cli._handle_log_command('log info "hello world"', logger)
         logger.info.assert_called_once_with("hello world")
 
     def test_handle_log_single_quotes(self):
         """Log command strips single quotes."""
         logger = Mock()
-        self.cli._handle_log_command(
-            "log debug 'test msg'", logger
-        )
+        self.cli._handle_log_command("log debug 'test msg'", logger)
         logger.debug.assert_called_once_with("test msg")
 
     def test_handle_log_invalid_level(self, capsys):
         """Invalid level in log command prints error."""
         logger = Mock()
-        self.cli._handle_log_command(
-            "log trace something", logger
-        )
+        self.cli._handle_log_command("log trace something", logger)
         captured = capsys.readouterr()
         assert "Invalid log level" in captured.out
 
@@ -1346,9 +1271,7 @@ class TestMohflowCLICoverage:
         """run() with --validate-config and config file."""
         cfg = tmp_path / "config.json"
         cfg.write_text(
-            json.dumps(
-                {"service_name": "svc", "log_level": "INFO"}
-            )
+            json.dumps({"service_name": "svc", "log_level": "INFO"})
         )
 
         result = self.cli.run(
@@ -1363,13 +1286,9 @@ class TestMohflowCLICoverage:
         assert result == 0
 
     @patch("mohflow.cli.MohflowLogger")
-    def test_run_validate_config_no_file(
-        self, mock_logger_cls, capsys
-    ):
+    def test_run_validate_config_no_file(self, mock_logger_cls, capsys):
         """run() with --validate-config and no config file."""
-        result = self.cli.run(
-            ["-s", "test-svc", "--validate-config"]
-        )
+        result = self.cli.run(["-s", "test-svc", "--validate-config"])
         assert result == 0
 
     @patch("mohflow.cli.MohflowLogger")
@@ -1402,9 +1321,7 @@ class TestMohflowCLICoverage:
             assert result == 0
 
     @patch("mohflow.cli.MohflowLogger")
-    def test_run_with_test_logging(
-        self, mock_logger_cls, capsys
-    ):
+    def test_run_with_test_logging(self, mock_logger_cls, capsys):
         """run() with --test-logging calls test_logging."""
         mock_logger_cls.return_value = Mock()
         with patch.object(
@@ -1413,16 +1330,12 @@ class TestMohflowCLICoverage:
             return_value=Mock(),
         ):
             try:
-                self.cli.run(
-                    ["-s", "my-service", "--test-logging"]
-                )
+                self.cli.run(["-s", "my-service", "--test-logging"])
             except (AttributeError, SystemExit):
                 pass
 
     @patch("mohflow.cli.MohflowLogger")
-    def test_run_with_config_file(
-        self, mock_logger_cls, tmp_path
-    ):
+    def test_run_with_config_file(self, mock_logger_cls, tmp_path):
         """run() with --config merges file and CLI config."""
         cfg = tmp_path / "config.json"
         cfg.write_text(
@@ -1439,15 +1352,11 @@ class TestMohflowCLICoverage:
             "create_logger",
             return_value=Mock(),
         ):
-            result = self.cli.run(
-                ["-s", "cli-svc", "--config", str(cfg)]
-            )
+            result = self.cli.run(["-s", "cli-svc", "--config", str(cfg)])
             assert result == 0
 
     @patch("mohflow.cli.MohflowLogger")
-    def test_run_validation_failure_returns_1(
-        self, mock_logger_cls
-    ):
+    def test_run_validation_failure_returns_1(self, mock_logger_cls):
         """run() returns 1 when final config validation fails."""
         # Patch validate_configuration to return False
         with patch.object(
@@ -1507,11 +1416,7 @@ class TestBatcherSubscriber:
 
         hub = MohnitorHub()
         ws = Mock()
-        with patch(
-            "mohflow.devui.hub.message_batcher"
-        ) as mock_batcher:
+        with patch("mohflow.devui.hub.message_batcher") as mock_batcher:
             mock_batcher.add_subscriber = Mock()
             hub._add_batcher_subscriber(ws)
-            mock_batcher.add_subscriber.assert_called_once_with(
-                ws
-            )
+            mock_batcher.add_subscriber.assert_called_once_with(ws)

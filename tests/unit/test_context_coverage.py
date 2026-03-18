@@ -44,7 +44,6 @@ from mohflow.context.scoped_context import (
     thread_context,
 )
 
-
 # ── Fixtures ──────────────────────────────────────────────────────
 
 
@@ -198,9 +197,7 @@ class TestCorrelationIDManager:
 
     def test_extract_x_correlation_id(self):
         mgr = CorrelationIDManager()
-        assert (
-            mgr.extract_correlation_id({"X-Correlation-ID": "c1"}) == "c1"
-        )
+        assert mgr.extract_correlation_id({"X-Correlation-ID": "c1"}) == "c1"
 
     def test_extract_x_request_id(self):
         mgr = CorrelationIDManager()
@@ -208,9 +205,7 @@ class TestCorrelationIDManager:
 
     def test_extract_correlation_id_header(self):
         mgr = CorrelationIDManager()
-        assert (
-            mgr.extract_correlation_id({"Correlation-ID": "c2"}) == "c2"
-        )
+        assert mgr.extract_correlation_id({"Correlation-ID": "c2"}) == "c2"
 
     def test_extract_request_id_header(self):
         mgr = CorrelationIDManager()
@@ -226,9 +221,7 @@ class TestCorrelationIDManager:
 
     def test_extract_case_insensitive(self):
         mgr = CorrelationIDManager()
-        assert (
-            mgr.extract_correlation_id({"x-correlation-id": "ci"}) == "ci"
-        )
+        assert mgr.extract_correlation_id({"x-correlation-id": "ci"}) == "ci"
 
     def test_extract_returns_none_when_absent(self):
         mgr = CorrelationIDManager()
@@ -423,9 +416,7 @@ class TestSingletonInstances:
         assert isinstance(default_manager, CorrelationIDManager)
 
     def test_thread_local_manager_is_thread_local(self):
-        assert isinstance(
-            thread_local_manager, ThreadLocalCorrelationManager
-        )
+        assert isinstance(thread_local_manager, ThreadLocalCorrelationManager)
 
 
 # ── Flask middleware ─────────────────────────────────────────────
@@ -438,9 +429,7 @@ class TestFlaskCorrelationMiddleware:
         mock_request = MagicMock()
         mock_request.headers = {"X-Correlation-ID": "flask-id"}
 
-        with patch.dict(
-            "sys.modules", {"flask": MagicMock()}
-        ):
+        with patch.dict("sys.modules", {"flask": MagicMock()}):
             with patch(
                 "mohflow.context.correlation.request",
                 mock_request,
@@ -454,9 +443,7 @@ class TestFlaskCorrelationMiddleware:
                 # Instead, we test the branch by mocking flask
                 flask_mod = MagicMock()
                 flask_mod.request = mock_request
-                with patch.dict(
-                    "sys.modules", {"flask": flask_mod}
-                ):
+                with patch.dict("sys.modules", {"flask": flask_mod}):
                     mod.flask_correlation_middleware()
                     assert get_correlation_id() == "flask-id"
 
@@ -677,9 +664,7 @@ class TestScopedContextManager:
 
     def test_request_context_basic(self):
         mgr = ScopedContextManager()
-        with mgr.request_context(
-            request_id="r1", user="u1"
-        ) as scope_id:
+        with mgr.request_context(request_id="r1", user="u1") as scope_id:
             assert isinstance(scope_id, str)
             assert len(scope_id) == 8
             ctx = mgr.get_current_context()
@@ -896,9 +881,7 @@ class TestContextualLogger:
     def test_set_context(self):
         cl = ContextualLogger()
         cl.set_context(env="prod")
-        assert cl.context_manager.get_global_context() == {
-            "env": "prod"
-        }
+        assert cl.context_manager.get_global_context() == {"env": "prod"}
 
 
 # ── ContextualLoggerProxy ────────────────────────────────────────
@@ -926,9 +909,7 @@ class TestContextualLoggerProxy:
         logger = self._make_mock_logger()
         proxy = ContextualLoggerProxy(logger, {"user": "u1"})
         proxy.debug("msg", extra="e1")
-        logger.debug.assert_called_once_with(
-            "msg", user="u1", extra="e1"
-        )
+        logger.debug.assert_called_once_with("msg", user="u1", extra="e1")
 
     def test_info(self):
         logger = self._make_mock_logger()
@@ -940,9 +921,7 @@ class TestContextualLoggerProxy:
         logger = self._make_mock_logger()
         proxy = ContextualLoggerProxy(logger, {"ctx": "c"})
         proxy.warning("warn msg", k="v")
-        logger.warning.assert_called_once_with(
-            "warn msg", ctx="c", k="v"
-        )
+        logger.warning.assert_called_once_with("warn msg", ctx="c", k="v")
 
     def test_error(self):
         logger = self._make_mock_logger()
@@ -954,20 +933,14 @@ class TestContextualLoggerProxy:
         logger = self._make_mock_logger()
         proxy = ContextualLoggerProxy(logger, {"sev": "high"})
         proxy.critical("crit msg")
-        logger.critical.assert_called_once_with(
-            "crit msg", sev="high"
-        )
+        logger.critical.assert_called_once_with("crit msg", sev="high")
 
     def test_kwargs_override_context(self):
         """Explicit kwargs should override proxy context."""
         logger = self._make_mock_logger()
-        proxy = ContextualLoggerProxy(
-            logger, {"key": "from_context"}
-        )
+        proxy = ContextualLoggerProxy(logger, {"key": "from_context"})
         proxy.info("msg", key="from_kwargs")
-        logger.info.assert_called_once_with(
-            "msg", key="from_kwargs"
-        )
+        logger.info.assert_called_once_with("msg", key="from_kwargs")
 
     def test_log_with_context_method(self):
         """Directly test _log_with_context."""
@@ -1000,9 +973,7 @@ class TestGlobalConvenienceFunctions:
         assert get_global_context() == {}
 
     def test_request_context_function(self):
-        with request_context(
-            request_id="r1"
-        ) as scope_id:
+        with request_context(request_id="r1") as scope_id:
             assert isinstance(scope_id, str)
             ctx = _global_context_manager.get_current_context()
             assert ctx["request_id"] == "r1"

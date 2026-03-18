@@ -346,9 +346,7 @@ class TestFlaskExtensionCoverage:
         assert resp.headers["X-Request-ID"] == "r2"
         logger.info.assert_called_once()
 
-    def test_after_request_unknown_status_code_defaults_info(
-        self, flask_env
-    ):
+    def test_after_request_unknown_status_code_defaults_info(self, flask_env):
         mod = flask_env["mod"]
         logger = _make_logger()
         ext = mod.MohFlowFlaskExtension()
@@ -611,9 +609,7 @@ class TestFlaskExtensionCoverage:
         req.headers = MagicMock()
         req.headers.get = MagicMock(
             side_effect=lambda h: (
-                "10.0.0.1, 10.0.0.2"
-                if h == "X-Forwarded-For"
-                else None
+                "10.0.0.1, 10.0.0.2" if h == "X-Forwarded-For" else None
             )
         )
         req.environ = {}
@@ -830,9 +826,7 @@ class TestFlaskHelpersCoverage:
     def test_create_metrics_route_prometheus(self, flask_env):
         mod = flask_env["mod"]
         logger = _make_logger()
-        logger.export_prometheus_metrics = MagicMock(
-            return_value="# HELP\n"
-        )
+        logger.export_prometheus_metrics = MagicMock(return_value="# HELP\n")
         ep = mod.create_metrics_route(logger)
         result = ep()
         assert result[0] == "# HELP\n"
@@ -842,9 +836,7 @@ class TestFlaskHelpersCoverage:
         mod = flask_env["mod"]
         logger = _make_logger()
         logger.export_prometheus_metrics = MagicMock(return_value=None)
-        logger.get_metrics_summary = MagicMock(
-            return_value={"count": 5}
-        )
+        logger.get_metrics_summary = MagicMock(return_value={"count": 5})
         ep = mod.create_metrics_route(logger)
         ep()
         mod.jsonify.assert_called()
@@ -853,9 +845,7 @@ class TestFlaskHelpersCoverage:
         mod = flask_env["mod"]
         logger = _make_logger()
         del logger.export_prometheus_metrics
-        logger.get_metrics_summary = MagicMock(
-            return_value={"total": 100}
-        )
+        logger.get_metrics_summary = MagicMock(return_value={"total": 100})
         ep = mod.create_metrics_route(logger)
         ep()
         mod.jsonify.assert_called()
@@ -1400,9 +1390,7 @@ class TestDjangoHelpersCoverage:
     def test_configure_mohflow_django(self, django_env):
         mod = django_env["mod"]
         logger = _make_logger()
-        cfg = mod.configure_mohflow_django(
-            logger, exclude_paths=["/health"]
-        )
+        cfg = mod.configure_mohflow_django(logger, exclude_paths=["/health"])
         assert cfg["logger"] is logger
         assert "/health" in cfg["exclude_paths"]
         assert cfg["log_requests"] is True
@@ -1425,9 +1413,7 @@ class TestDjangoHelpersCoverage:
     def test_django_filter_with_context(self, django_env):
         mod = django_env["mod"]
         logger = _make_logger()
-        logger.get_current_context = MagicMock(
-            return_value={"service": "api"}
-        )
+        logger.get_current_context = MagicMock(return_value={"service": "api"})
         filt = mod.MohFlowDjangoFilter(logger)
         record = MagicMock()
         assert filt.filter(record) is True
@@ -1822,9 +1808,7 @@ class TestFastAPIMiddlewareCoverage:
 
     def test_get_client_ip_from_headers(self, fastapi_env):
         mod = fastapi_env["mod"]
-        mw = mod.MohFlowFastAPIMiddleware(
-            MagicMock(), _make_logger()
-        )
+        mw = mod.MohFlowFastAPIMiddleware(MagicMock(), _make_logger())
         req = MagicMock()
         req.headers = {"x-forwarded-for": "10.0.0.1, 10.0.0.2"}
         req.client = None
@@ -1832,9 +1816,7 @@ class TestFastAPIMiddlewareCoverage:
 
     def test_get_client_ip_fallback_client(self, fastapi_env):
         mod = fastapi_env["mod"]
-        mw = mod.MohFlowFastAPIMiddleware(
-            MagicMock(), _make_logger()
-        )
+        mw = mod.MohFlowFastAPIMiddleware(MagicMock(), _make_logger())
         req = MagicMock()
         req.headers = {}
         req.client = MagicMock()
@@ -1843,9 +1825,7 @@ class TestFastAPIMiddlewareCoverage:
 
     def test_get_client_ip_none(self, fastapi_env):
         mod = fastapi_env["mod"]
-        mw = mod.MohFlowFastAPIMiddleware(
-            MagicMock(), _make_logger()
-        )
+        mw = mod.MohFlowFastAPIMiddleware(MagicMock(), _make_logger())
         req = MagicMock()
         req.headers = {}
         req.client = None
@@ -2111,9 +2091,7 @@ class TestCeleryIntegrationCoverage:
         sender = MagicMock()
         sender.name = "my_task"
         task = MagicMock()
-        task.mohflow_context = {
-            "task_start_time": time.time() - 0.1
-        }
+        task.mohflow_context = {"task_start_time": time.time() - 0.1}
 
         i._task_postrun_handler(
             sender=sender,
@@ -2297,9 +2275,7 @@ class TestCeleryTaskCoverage:
         with patch.object(
             celery_env["Task"], "apply_async", return_value=MagicMock()
         ):
-            task.apply_async(
-                headers={"correlation_id": "existing-id"}
-            )
+            task.apply_async(headers={"correlation_id": "existing-id"})
 
         kw = logger.info.call_args[1]
         assert kw["correlation_id"] == "existing-id"
@@ -2467,9 +2443,7 @@ class TestASGIMiddlewareCoverage:
         mw = Cls(app, logger)
 
         async def run():
-            await mw(
-                {"type": "websocket"}, MagicMock(), MagicMock()
-            )
+            await mw({"type": "websocket"}, MagicMock(), MagicMock())
 
         _run_async(run())
         logger.info.assert_not_called()
@@ -2504,9 +2478,7 @@ class TestASGIMiddlewareCoverage:
                 {
                     "type": "http.response.start",
                     "status": 200,
-                    "headers": [
-                        (b"content-type", b"application/json")
-                    ],
+                    "headers": [(b"content-type", b"application/json")],
                 }
             )
             await send(
@@ -2763,9 +2735,7 @@ class TestASGIMiddlewareCoverage:
                 }
             )
             for chunk in chunks:
-                await send(
-                    {"type": "http.response.body", "body": chunk}
-                )
+                await send({"type": "http.response.body", "body": chunk})
 
         mw = Cls(app, logger)
 
@@ -2832,9 +2802,7 @@ class TestWSGIMiddlewareCoverage:
         logger = _make_logger()
 
         def app(environ, start_response):
-            start_response(
-                "200 OK", [("Content-Type", "text/plain")]
-            )
+            start_response("200 OK", [("Content-Type", "text/plain")])
             return [b"hello"]
 
         mw = Cls(app, logger)
@@ -3168,9 +3136,7 @@ class TestASGIWSGIFactoriesCoverage:
         from mohflow.integrations.asgi_wsgi import log_request_manually
 
         logger = _make_logger()
-        rid = log_request_manually(
-            logger, "GET", "/api", custom="val"
-        )
+        rid = log_request_manually(logger, "GET", "/api", custom="val")
         assert len(rid) == 36
         logger.info.assert_called_once()
 
@@ -3198,9 +3164,7 @@ class TestASGIWSGIFactoriesCoverage:
         )
 
         logger = _make_logger()
-        log_response_manually(
-            logger, "r3", "POST", "/api", 500, 100.0
-        )
+        log_response_manually(logger, "r3", "POST", "/api", 500, 100.0)
         logger.error.assert_called_once()
 
     def test_log_response_manually_399(self):
@@ -3209,7 +3173,5 @@ class TestASGIWSGIFactoriesCoverage:
         )
 
         logger = _make_logger()
-        log_response_manually(
-            logger, "r4", "GET", "/api", 301, 2.0
-        )
+        log_response_manually(logger, "r4", "GET", "/api", 301, 2.0)
         logger.info.assert_called_once()
