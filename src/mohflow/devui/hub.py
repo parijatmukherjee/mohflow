@@ -151,7 +151,7 @@ class MohnitorHub:
                 "performance": perf_report,
                 "uptime": uptime,
                 "port": self.port,
-                "started_at": self.started_at.isoformat() + "Z",
+                "started_at": self.started_at.isoformat(),
             }
 
         @self.app.get("/version")
@@ -159,7 +159,7 @@ class MohnitorHub:
             """Version information endpoint."""
             return {
                 "version": "1.0.0",
-                "build_date": datetime.now(timezone.utc).isoformat() + "Z",
+                "build_date": datetime.now(timezone.utc).isoformat(),
             }
 
         @self.app.get("/ui")
@@ -453,7 +453,7 @@ class MohnitorHub:
                         ),
                     },
                     "uptime": uptime,
-                    "started_at": self.started_at.isoformat() + "Z",
+                    "started_at": self.started_at.isoformat(),
                 },
             }
 

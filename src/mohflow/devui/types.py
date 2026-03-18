@@ -19,9 +19,21 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _normalize_iso_timestamp(iso_string: str) -> str:
+    """Normalize ISO timestamp string for fromisoformat() compatibility.
+
+    Handles: '...Z', '...+00:00', '...+00:00Z' (malformed).
+    """
+    if iso_string.endswith("+00:00Z"):
+        return iso_string[:-1]  # Strip trailing Z, keep +00:00
+    if iso_string.endswith("Z"):
+        return iso_string[:-1] + "+00:00"
+    return iso_string
+
+
 def parse_iso_datetime(iso_string: str) -> datetime:
     """Parse ISO datetime string with Z timezone handling."""
-    return datetime.fromisoformat(iso_string.replace("Z", "+00:00"))
+    return datetime.fromisoformat(_normalize_iso_timestamp(iso_string))
 
 
 @dataclass
@@ -165,18 +177,16 @@ class LogEvent:
     def from_dict(cls, data: Dict[str, Any]) -> "LogEvent":
         """Deserialize from dictionary."""
         # Parse timestamp
-        timestamp_str = data["timestamp"]
-        if timestamp_str.endswith("Z"):
-            timestamp_str = timestamp_str[:-1] + "+00:00"
-        timestamp = datetime.fromisoformat(timestamp_str)
+        timestamp = datetime.fromisoformat(
+            _normalize_iso_timestamp(data["timestamp"])
+        )
 
         # Parse received_at if present
         received_at = None
         if data.get("received_at"):
-            received_str = data["received_at"]
-            if received_str.endswith("Z"):
-                received_str = received_str[:-1] + "+00:00"
-            received_at = datetime.fromisoformat(received_str)
+            received_at = datetime.fromisoformat(
+                _normalize_iso_timestamp(data["received_at"])
+            )
 
         return cls(
             timestamp=timestamp,
