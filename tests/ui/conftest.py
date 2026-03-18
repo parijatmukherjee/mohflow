@@ -15,9 +15,29 @@ def hub_server_available():
         return False
 
 
+_HUB_AVAILABLE = hub_server_available()
+
 requires_hub_server = pytest.mark.skipif(
-    not hub_server_available(), reason="Mohnitor hub server not available"
+    not _HUB_AVAILABLE,
+    reason="Mohnitor hub server not available",
 )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Auto-skip UI tests that need the hub server when it's not running."""
+    if _HUB_AVAILABLE:
+        return
+    skip_marker = pytest.mark.skip(reason="Mohnitor hub server not available")
+    for item in items:
+        # Skip tests in test_contracts/, test_integration/, test_automation/
+        # that hit the live hub
+        rel = str(item.fspath)
+        if (
+            "test_contracts" in rel
+            or "test_integration" in rel
+            or "test_automation" in rel
+        ):
+            item.add_marker(skip_marker)
 
 
 # Optional dependency markers

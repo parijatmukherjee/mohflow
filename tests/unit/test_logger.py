@@ -101,7 +101,11 @@ def test_log_levels(caplog, log_level, method):
     with caplog.at_level(numeric_level):
         getattr(logger, method)(f"Test {log_level}")
 
-        records = [r for r in caplog.records if r.levelname == log_level]
+        records = [
+            r
+            for r in caplog.records
+            if r.levelname == log_level and r.name == "test-service"
+        ]
         assert len(records) == 1
         assert f"Test {log_level}" in records[0].message
 
