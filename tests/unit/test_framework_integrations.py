@@ -268,10 +268,7 @@ class TestFlaskBeforeRequest:
         req.view_args = None
         req.environ = {}
         g_mock = MagicMock()
-        with (
-            patch.object(mod, "request", req),
-            patch.object(mod, "g", g_mock),
-        ):
+        with patch.object(mod, "request", req), patch.object(mod, "g", g_mock):
             ext._before_request()
         assert g_mock.mohflow_request_id is not None
         assert g_mock.mohflow_start_time is not None
@@ -290,10 +287,7 @@ class TestFlaskBeforeRequest:
         req.view_args = {"id": 7}
         req.environ = {"REMOTE_ADDR": "10.0.0.1"}
         g_mock = MagicMock()
-        with (
-            patch.object(mod, "request", req),
-            patch.object(mod, "g", g_mock),
-        ):
+        with patch.object(mod, "request", req), patch.object(mod, "g", g_mock):
             ext._before_request()
         ext.logger.info.assert_called_once()
 
@@ -311,10 +305,7 @@ class TestFlaskBeforeRequest:
         req.view_args = None
         req.environ = {}
         g_mock = MagicMock()
-        with (
-            patch.object(mod, "request", req),
-            patch.object(mod, "g", g_mock),
-        ):
+        with patch.object(mod, "request", req), patch.object(mod, "g", g_mock):
             ext._before_request()
         ext.logger.info.assert_not_called()
 
@@ -372,10 +363,7 @@ class TestFlaskAfterRequest:
         resp.content_type = "text/html"
         resp.content_length = 100
         resp.headers = {}
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(mod, "request", req):
             result = ext._after_request(resp)
         assert result is resp
         assert resp.headers["X-Request-ID"] == "r2"
@@ -396,10 +384,7 @@ class TestFlaskAfterRequest:
         resp.content_type = None
         resp.content_length = None
         resp.headers = {}
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(mod, "request", req):
             ext._after_request(resp)
         ext.logger.warning.assert_called_once()
 
@@ -418,10 +403,7 @@ class TestFlaskAfterRequest:
         resp.content_type = None
         resp.content_length = None
         resp.headers = {}
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(mod, "request", req):
             ext._after_request(resp)
         ext.logger.error.assert_called_once()
 
@@ -440,10 +422,7 @@ class TestFlaskAfterRequest:
         resp.content_type = None
         resp.content_length = None
         resp.headers = {}
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(mod, "request", req):
             ext._after_request(resp)
         ext.logger.info.assert_called_once()
 
@@ -462,10 +441,7 @@ class TestFlaskAfterRequest:
         resp.content_type = None
         resp.content_length = None
         resp.headers = {}
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(mod, "request", req):
             ext._after_request(resp)
         ext.logger.info.assert_not_called()
 
@@ -483,10 +459,7 @@ class TestFlaskHandleException:
         mod = flask_env["mod"]
         ext = self._make_ext(mod)
         g_mock = MagicMock(spec=[])
-        with (
-            patch.object(mod, "g", g_mock),
-            pytest.raises(ValueError),
-        ):
+        with patch.object(mod, "g", g_mock), pytest.raises(ValueError):
             ext._handle_exception(ValueError("boom"))
 
     def test_http_exception_uses_level_mapping(self, flask_env):
@@ -501,11 +474,9 @@ class TestFlaskHandleException:
         req.method = "GET"
         req.path = "/missing"
         err = HTTPException(description="Not Found", code=404)
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-            pytest.raises(HTTPException),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(
+            mod, "request", req
+        ), pytest.raises(HTTPException):
             ext._handle_exception(err)
         ext.logger.warning.assert_called_once()
 
@@ -519,11 +490,9 @@ class TestFlaskHandleException:
         req = MagicMock()
         req.method = "POST"
         req.path = "/err"
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-            pytest.raises(RuntimeError),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(
+            mod, "request", req
+        ), pytest.raises(RuntimeError):
             ext._handle_exception(RuntimeError("kaboom"))
         ext.logger.error.assert_called_once()
 
@@ -539,11 +508,9 @@ class TestFlaskHandleException:
         req.method = "GET"
         req.path = "/x"
         err = HTTPException(description="Gone", code=410)
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-            pytest.raises(HTTPException),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(
+            mod, "request", req
+        ), pytest.raises(HTTPException):
             ext._handle_exception(err)
         ext.logger.warning.assert_called_once()
 
@@ -842,10 +809,7 @@ class TestFlaskDecorators:
 
         g_mock = MagicMock()
         g_mock.mohflow_context = {}
-        with (
-            patch.object(mod, "g", g_mock),
-            pytest.raises(ValueError),
-        ):
+        with patch.object(mod, "g", g_mock), pytest.raises(ValueError):
             bad()
         logger.error.assert_called_once()
 
@@ -863,9 +827,8 @@ class TestFlaskDecorators:
 
         g_mock = MagicMock()
         g_mock.mohflow_context = {}
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "current_app", current_app),
+        with patch.object(mod, "g", g_mock), patch.object(
+            mod, "current_app", current_app
         ):
             assert view() == "data"
         ext_logger.info.assert_called_once()

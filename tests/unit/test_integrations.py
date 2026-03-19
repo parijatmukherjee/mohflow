@@ -262,10 +262,7 @@ class TestMohFlowFlaskExtension:
 
         g_mock = MagicMock()
 
-        with (
-            patch.object(mod, "request", req),
-            patch.object(mod, "g", g_mock),
-        ):
+        with patch.object(mod, "request", req), patch.object(mod, "g", g_mock):
             ext._before_request()
 
         assert hasattr(g_mock, "mohflow_request_id")
@@ -316,10 +313,7 @@ class TestMohFlowFlaskExtension:
         response.content_length = 42
         response.headers = {}
 
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(mod, "request", req):
             result = ext._after_request(response)
 
         assert result is response
@@ -370,11 +364,9 @@ class TestMohFlowFlaskExtension:
 
         error = RuntimeError("boom")
 
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-            pytest.raises(RuntimeError, match="boom"),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(
+            mod, "request", req
+        ), pytest.raises(RuntimeError, match="boom"):
             ext._handle_exception(error)
 
         logger.error.assert_called_once()
@@ -400,11 +392,9 @@ class TestMohFlowFlaskExtension:
 
         error = HTTPException(description="Not Found", code=404)
 
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "request", req),
-            pytest.raises(HTTPException),
-        ):
+        with patch.object(mod, "g", g_mock), patch.object(
+            mod, "request", req
+        ), pytest.raises(HTTPException):
             ext._handle_exception(error)
 
         logger.warning.assert_called_once()
@@ -418,10 +408,7 @@ class TestMohFlowFlaskExtension:
 
         g_mock = MagicMock(spec=[])
 
-        with (
-            patch.object(mod, "g", g_mock),
-            pytest.raises(ValueError),
-        ):
+        with patch.object(mod, "g", g_mock), pytest.raises(ValueError):
             ext._handle_exception(ValueError("nope"))
 
     def test_get_client_ip_from_proxy_headers(self, flask_mocks):
@@ -532,9 +519,8 @@ class TestFlaskDecorators:
         g_mock = MagicMock()
         g_mock.mohflow_context = {}
 
-        with (
-            patch.object(mod, "g", g_mock),
-            pytest.raises(ValueError, match="broken"),
+        with patch.object(mod, "g", g_mock), pytest.raises(
+            ValueError, match="broken"
         ):
             bad_view()
 
@@ -557,9 +543,8 @@ class TestFlaskDecorators:
         g_mock = MagicMock()
         g_mock.mohflow_context = {}
 
-        with (
-            patch.object(mod, "g", g_mock),
-            patch.object(mod, "current_app", current_app),
+        with patch.object(mod, "g", g_mock), patch.object(
+            mod, "current_app", current_app
         ):
             result = view_fn()
 
