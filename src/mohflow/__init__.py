@@ -8,6 +8,10 @@ from .context.correlation import CorrelationContext, with_correlation_id
 from .auto_config import detect_environment, auto_configure
 from .templates import TemplateManager
 from .context_api import bind_context, unbind_context, clear_context
+from .schema import LogSchema, SchemaValidator, SchemaValidationError, field
+from .actions import ActionLogger, Action
+from .diagnose import DiagnosticFormatter
+from .anomaly import AnomalyDetector
 
 __version__ = "1.1.2"
 
@@ -109,4 +113,12 @@ __all__ = [
     "bind_context",
     "unbind_context",
     "clear_context",
+    "LogSchema",
+    "SchemaValidator",
+    "SchemaValidationError",
+    "field",
+    "ActionLogger",
+    "Action",
+    "DiagnosticFormatter",
+    "AnomalyDetector",
 ]
