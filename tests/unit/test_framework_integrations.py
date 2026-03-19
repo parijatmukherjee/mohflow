@@ -10,7 +10,6 @@ import sys
 import time
 import types
 import uuid
-from contextlib import contextmanager
 from datetime import datetime, timezone
 from unittest.mock import (
     AsyncMock,
@@ -24,15 +23,20 @@ import pytest
 # ------------------------------------------------------------------ #
 #  Shared helpers                                                      #
 # ------------------------------------------------------------------ #
+class _NoopCM:
+    """A simple no-op context manager compatible with all Pythons."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+
 def _make_logger():
     """Create a mock logger with request_context as a real CM."""
     logger = MagicMock()
-
-    @contextmanager
-    def _noop_cm():
-        yield
-
-    logger.request_context = lambda *a, **kw: _noop_cm()
+    logger.request_context = MagicMock(side_effect=lambda *a, **kw: _NoopCM())
     logger.info = MagicMock()
     logger.warning = MagicMock()
     logger.error = MagicMock()
