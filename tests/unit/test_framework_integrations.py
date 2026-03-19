@@ -1825,6 +1825,7 @@ class TestFastAPIMiddlewareInit:
 
         def extractor(r):
             return {}
+
         mw = mod.MohFlowFastAPIMiddleware(
             MagicMock(),
             _make_logger(),
