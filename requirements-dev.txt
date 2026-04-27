@@ -1,6 +1,6 @@
 # Build tools
 setuptools>=61.0
-wheel>=0.38.0
+wheel>=0.47.0
 build>=1.0.0
 twine>=4.0.0
 
