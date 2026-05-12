@@ -7,7 +7,7 @@ structlog>=23.0.0      # Structured logging library
 python-json-logger>=2.0.0  # JSON formatter for standard logging
 
 # Optional high-performance alternatives
-picologging>=0.9.0     # Faster drop-in replacement for logging
+picologging>=0.9.3     # Faster drop-in replacement for logging
 
 # Additional test utilities  
 pytest>=7.0.0          # For running benchmark tests
