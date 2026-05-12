@@ -1,4 +1,4 @@
-# MohFlow - Structured Logging for Python
+# MohFlow — Structured JSON Logging for Python (Loki, Grafana, Console, File)
 
 [![CI](https://github.com/parijatmukherjee/mohflow/actions/workflows/ci.yml/badge.svg)](https://github.com/parijatmukherjee/mohflow/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/mohflow.svg)](https://badge.fury.io/py/mohflow)
